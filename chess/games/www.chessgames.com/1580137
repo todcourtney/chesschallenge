@@ -1,0 +1,21 @@
+[Event "Amsterdam"]
+[Site "Amsterdam, NL"]
+[Date "1899.08.11"]
+[EventDate "1899.08.07"]
+[Round "8"]
+[Result "1-0"]
+[White "Arnold van Foreest"]
+[Black "Cornelius Trimborn"]
+[ECO "C54"]
+[WhiteElo "?"]
+[BlackElo "?"]
+[PlyCount "79"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bc4 Nf6 4. d4 exd4 5. O-O Bc5 6. c3
+Nxe4 7. cxd4 d5 8. dxc5 dxc4 9. Qe2 Qd3 10. Re1 f5 11. Nc3 O-O
+12. Nxe4 fxe4 13. Qxe4 Bf5 14. Qxd3 cxd3 15. Bd2 Rae8 16. Rxe8
+Rxe8 17. Re1 Rxe1+ 18. Bxe1 Kf7 19. Bc3 a5 20. Kf1 Ke6 21. h3
+h5 22. Bxg7 Kd5 23. Nd2 Kxc5 24. f3 Nd4 25. g4 hxg4 26. fxg4
+Be6 27. a3 a4 28. Kf2 Nb3 29. Nxb3+ Bxb3 30. Ke3 Kc4 31. Bc3
+Bd1 32. Kf4 c5 33. h4 b5 34. h5 b4 35. Bd2 Kb3 36. h6 c4
+37. axb4 a3 38. bxa3 c3 39. Bxc3 Kxc3 40. h7 1-0

@@ -1,0 +1,18 @@
+[Event "Amsterdam"]
+[Site "Amsterdam, NL"]
+[Date "1899.08.10"]
+[EventDate "1899.08.07"]
+[Round "6"]
+[Result "0-1"]
+[White "Julius Dimer"]
+[Black "Henry Ernest Atkins"]
+[ECO "C55"]
+[WhiteElo "?"]
+[BlackElo "?"]
+[PlyCount "42"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bc4 Nf6 4. d4 exd4 5. O-O d6 6. Ng5 Ne5
+7. Qxd4 Be7 8. f4 Nxc4 9. Qxc4 O-O 10. Nc3 h6 11. Nf3 c6
+12. Be3 Ng4 13. Bf2 Be6 14. Qd3 Nxf2 15. Rxf2 Qb6 16. Nd4 Bf6
+17. Nxe6 fxe6 18. e5 Bxe5 19. Kf1 Qxb2 20. Rb1 Qxc3 21. fxe5
+Qxe5 0-1

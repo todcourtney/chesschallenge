@@ -1,0 +1,16 @@
+[Event "Hastings 1958/59"]
+[Site "Hastings ENG"]
+[Date "1959.01.01"]
+[EventDate "1958.12.29"]
+[Round "4"]
+[Result "1-0"]
+[White "Wolfgang Uhlmann"]
+[Black "Robert Wade"]
+[ECO "D24"]
+[WhiteElo "?"]
+[BlackElo "?"]
+[PlyCount "31"]
+
+1.d4 d5 2.c4 dxc4 3.Nf3 c5 4.d5 Nf6 5.Nc3 e6 6.e4 exd5 7.e5 d4
+8.Bxc4 Nc6 9.exf6 dxc3 10.Qe2+ Kd7 11.Bf4 Qa5 12.Rd1+ Nd4
+13.Bb5+ Qxb5 14.Qxb5+ Ke6 15.Nxd4+ cxd4 16.Rxd4 1-0

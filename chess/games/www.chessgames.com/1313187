@@ -1,0 +1,24 @@
+[Event "Leningrad master"]
+[Site "Leningrad"]
+[Date "1954.??.??"]
+[EventDate "?"]
+[Round "?"]
+[Result "1-0"]
+[White "Lev Polugaevsky"]
+[Black "Vitaly Chekhover"]
+[ECO "B76"]
+[WhiteElo "?"]
+[BlackElo "?"]
+[PlyCount "115"]
+
+1.Nf3 c5 2.e4 d6 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3 g6 6.f3 Bg7 7.Be3
+O-O 8.Qd2 d5 9.e5 Ne8 10.f4 e6 11.Be2 f6 12.exf6 Nxf6 13.Bf3
+Nc6 14.O-O Nxd4 15.Bxd4 Ne8 16.Rad1 Bxd4+ 17.Qxd4 Qf6 18.Bg4
+Qxd4+ 19.Rxd4 g5 20.Re1 gxf4 21.Bxe6+ Bxe6 22.Rxe6 Nc7 23.Re7
+Rac8 24.Kf2 Rf6 25.Kf3 Rh6 26.Nxd5 Ne6 27.Rd2 Rf8 28.h4 a5
+29.c3 Ng7 30.Rxb7 Rxh4 31.Re2 Rh1 32.Re5 Nh5 33.Kg4 f3 34.gxf3
+Kh8 35.f4 Nxf4 36.Nxf4 Rg1+ 37.Kh3 Rxf4 38.Re8+ Rg8 39.Rxg8+
+Kxg8 40.Kg3 Rf8 41.Ra7 Rf5 42.b4 axb4 43.cxb4 Rf1 44.b5 Rb1
+45.Rb7 h5 46.b6 Kf8 47.a4 Ke8 48.a5 Kd8 49.a6 Rb3+ 50.Kh4 Kc8
+51.Rc7+ Kd8 52.a7 Rb4+ 53.Kxh5 Rb5+ 54.Kg4 Rxb6 55.Rh7 Ra6
+56.a8=Q+ Rxa8 57.Rh8+ Kd7 58.Rxa8 1-0

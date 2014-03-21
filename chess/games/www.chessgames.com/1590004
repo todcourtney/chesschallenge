@@ -1,0 +1,17 @@
+[Event "Manhattan CC March Forward op"]
+[Site " New York City,NY"]
+[Date "2004.??.??"]
+[EventDate "?"]
+[Round "?"]
+[Result "0-1"]
+[White "John Tempesta"]
+[Black "John A Curdo"]
+[ECO "A02"]
+[WhiteElo "?"]
+[BlackElo "?"]
+[PlyCount "42"]
+
+1.f4 e5 2.fxe5 d6 3.Nf3 dxe5 4.e4 Bc5 5.Bc4 Nc6 6.d3 Bg4 7.Bg5
+Bxf3 8.Qxf3 Qxg5 9.Qxf7+ Kd8 10.Qd5+ Bd6 11.O-O Nf6 12.Qb5 Ng4
+13.Nc3 Qe3+ 14.Kh1 Nf2+ 15.Rxf2 Qxf2 16.Qxb7 Rc8 17.h3 Kd7
+18.Qb3 Nd4 19.Qa4+ c6 20.Nd5 Qxc2 21.Qa6 Qxb2 0-1

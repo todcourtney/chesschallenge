@@ -1,0 +1,19 @@
+[Event "Simul"]
+[Site "City of London Chess Club"]
+[Date "1919.08.06"]
+[EventDate "?"]
+[Round "?"]
+[Result "0-1"]
+[White "Jose Raul Capablanca"]
+[Black "George Edward Wainwright"]
+[ECO "C60"]
+[WhiteElo "?"]
+[BlackElo "?"]
+[PlyCount "56"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bb5 g6 4. d4 exd4 5. c3 Bg7 6. cxd4
+Nge7 7. Nc3 O-O 8. Bg5 f6 9. Be3 d6 10. Qd2 a6 11. Bc4+ Kh8
+12. h4 Na5 13. Bd3 Qe8 14. h5 gxh5 15. Ne2 Nac6 16. Ng3 Bg4
+17. Nh2 f5 18. Nxg4 hxg4 19. exf5 Nd5 20. f6 Rxf6 21. Bxh7 Rh6
+22. O-O-O Nxe3 23. fxe3 Kxh7 24. Nf5 Qe4 25. Nxh6 Bxh6 26. Qf2
+Kg7 27. Rxh6 Rf8 28. Qg3 Nb4 0-1

@@ -1,0 +1,20 @@
+[Event "Amsterdam"]
+[Site "Amsterdam, NL"]
+[Date "1899.08.14"]
+[EventDate "1899.08.07"]
+[Round "11"]
+[Result "0-1"]
+[White "Jan Frederik Heemskerk"]
+[Black "Rudolf Swiderski"]
+[ECO "B32"]
+[WhiteElo "?"]
+[BlackElo "?"]
+[PlyCount "62"]
+
+1. e4 c5 2. Nf3 Nc6 3. d4 cxd4 4. Nxd4 g6 5. Nc3 Bg7 6. Be3 a6
+7. Bc4 e6 8. O-O Nge7 9. Nce2 O-O 10. Qd2 f5 11. exf5 gxf5
+12. Nxc6 Nxc6 13. Rad1 Qh4 14. Bb3 d5 15. Bg5 Qh5 16. Ng3 Qg6
+17. c3 Kh8 18. Rfe1 e5 19. f4 h6 20. Bh4 Qg4 21. fxe5 Qxh4
+22. Qxd5 f4 23. Ne4 Bg4 24. Nd6 Bxd1 25. Rxd1 Nxe5 26. Qxb7 f3
+27. Nf5 Rxf5 28. Qxa8+ Rf8 29. Qd5 Ng4 30. Qd2 Qxh2+ 31. Kf1
+Qh1# 0-1

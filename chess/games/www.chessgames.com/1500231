@@ -1,0 +1,17 @@
+[Event "NOR-ch"]
+[Site "Fredrikstad"]
+[Date "2003.07.04"]
+[EventDate "2003.07.04"]
+[Round "1"]
+[Result "1-0"]
+[White "Magnus Carlsen"]
+[Black "Stig Gabrielsen"]
+[ECO "B40"]
+[WhiteElo "2385"]
+[BlackElo "2269"]
+[PlyCount "35"]
+
+1. e4 c5 2. Nf3 e6 3. b3 b6 4. d4 cxd4 5. Nxd4 Bb7 6. Qe2 Nc6
+7. Nxc6 dxc6 8. Bb2 Bb4+ 9. Nd2 Nf6 10. O-O-O Qc7 11. Nc4 b5
+12. e5 Nd5 13. Nd6+ Bxd6 14. exd6 Qxd6 15. Bxg7 Rg8 16. Be5
+Qa3+ 17. Bb2 Qxa2 18. Rxd5 1-0

@@ -1,0 +1,18 @@
+[Event "Yugoslavia"]
+[Site "Yugoslavia"]
+[Date "1922.??.??"]
+[EventDate "?"]
+[Round "?"]
+[Result "0-1"]
+[White "A Nicifor"]
+[Black "E Kramer"]
+[ECO "C48"]
+[WhiteElo "?"]
+[BlackElo "?"]
+[PlyCount "50"]
+
+1.e4 e5 2.Nf3 Nc6 3.Bb5 Nf6 4.Nc3 Bc5 5.Nxe5 Nd4 6.Be2 O-O
+7.d3 d5 8.Bg5 Re8 9.Nf3 Nxe4 10.Nxe4 dxe4 11.Bxd8 exf3 12.Bh4
+fxg2 13.Kd2 gxh1=Q 14.Qxh1 Rxe2+ 15.Kd1 Bg4 16.Qxb7 Rxc2+
+17.Ke1 Re8+ 18.Kf1 Bh3+ 19.Kg1 Ne2+ 20.Kh1 Nc1 21.f4 Ree2
+22.Qb8+ Bf8 23.Bg3 Red2 24.Qxa7 Rd1+ 25.Qg1 Bg2# 0-1

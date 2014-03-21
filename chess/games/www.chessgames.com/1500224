@@ -1,0 +1,17 @@
+[Event "CRO-ch"]
+[Site "Zagreb"]
+[Date "1993.??.??"]
+[EventDate "?"]
+[Round "8"]
+[Result "1-0"]
+[White "Mladen Zelic"]
+[Black "Zvonko Takac"]
+[ECO "B21"]
+[WhiteElo "2310"]
+[BlackElo "2265"]
+[PlyCount "43"]
+
+1.e4 c5 2.d4 cxd4 3.c3 dxc3 4.Nxc3 Nc6 5.Nf3 d6 6.Bc4 e6 7.O-O
+Nf6 8.Qe2 Be7 9.Rd1 e5 10.Be3 O-O 11.Rac1 Bg4 12.h3 Bxf3
+13.Qxf3 Rc8 14.a3 a6 15.Qe2 Kh8 16.b4 Qc7 17.Nd5 Nxd5 18.Bxd5
+Nd4 19.Rxd4 Qxc1+ 20.Bxc1 exd4 21.Bb2 Bf6 22.Qd3 1-0

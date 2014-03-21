@@ -1,0 +1,20 @@
+[Event "Chess-in-the-Schools it"]
+[Site "New York, NY"]
+[Date "1996.??.??"]
+[EventDate "?"]
+[Round "1"]
+[Result "1-0"]
+[White "Ivan Sokolov"]
+[Black "Jaime Sunye Neto"]
+[ECO "E48"]
+[WhiteElo "2706"]
+[BlackElo "2558"]
+[PlyCount "73"]
+
+1.d4 Nf6 2.c4 e6 3.Nc3 Bb4 4.e3 O-O 5.Bd3 d5 6.cxd5 exd5
+7.Nge2 Re8 8.O-O b6 9.f3 Bb7 10.a3 Bf8 11.b4 c5 12.bxc5 bxc5
+13.Rb1 Qc8 14.Qb3 Bc6 15.Qa2 Nbd7 16.a4 Qd8 17.a5 Rb8 18.Bd2
+Rxb1 19.Rxb1 Bd6 20.Nb5 Bb8 21.Ng3 g6 22.dxc5 Nxc5 23.Qc2 Nxd3
+24.Qxd3 Bxb5 25.Rxb5 Qd7 26.a6 Qe6 27.Rb7 Nd7 28.Bc3 Be5
+29.Bd4 Bxd4 30.Qxd4 Nb8 31.e4 Qxa6 32.Qxd5 Rf8 33.h4 Nc6
+34.Rd7 Qb6+ 35.Kh2 Nb4 36.Qg5 a5 37.Nf5 1-0

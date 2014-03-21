@@ -1,0 +1,18 @@
+[Event "Amsterdam"]
+[Site "Amsterdam, NL"]
+[Date "1899.08.08"]
+[EventDate "1899.08.07"]
+[Round "4"]
+[Result "0-1"]
+[White "Cornelius Trimborn"]
+[Black "Adolf Georg Olland"]
+[ECO "B45"]
+[WhiteElo "?"]
+[BlackElo "?"]
+[PlyCount "46"]
+
+1. e4 c5 2. Nc3 Nc6 3. Nf3 e6 4. d4 cxd4 5. Nxd4 Nf6 6. Be3
+Bb4 7. Bd3 d5 8. exd5 exd5 9. f3 O-O 10. O-O Re8 11. Qd2 Qb6
+12. Nf5 d4 13. Bf2 Bxf5 14. Bxf5 dxc3 15. Qg5 Qa5 16. a3 cxb2
+17. Rad1 Qxa3 18. Rd3 Qa1 19. Rb3 Be1 20. c4 Bxf2+ 21. Kxf2
+Nd4 22. Rxb7 Re7 23. Kg1 Re1 0-1

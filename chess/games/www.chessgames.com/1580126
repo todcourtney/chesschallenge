@@ -1,0 +1,17 @@
+[Event "NED-ch02"]
+[Site "Delft"]
+[Date "1912.08.07"]
+[EventDate "?"]
+[Round "3"]
+[Result "0-1"]
+[White "Henry Baudet"]
+[Black "Hendrik Gouwentak"]
+[ECO "C28"]
+[WhiteElo "?"]
+[BlackElo "?"]
+[PlyCount "40"]
+
+1. e4 e5 2. Nc3 Nc6 3. f4 exf4 4. Nf3 g5 5. d4 g4 6. Bc4 gxf3
+7. O-O d5 8. Bxd5 Bg4 9. Qd3 Nb4 10. Qc4 Nxd5 11. Nxd5 c6
+12. Nxf4 Qd7 13. h3 fxg2 14. Kxg2 Nf6 15. hxg4 Qxg4+ 16. Kf2
+Nxe4+ 17. Ke3 Ng3 18. Rf3 Bh6 19. Qd3 O-O-O 20. c3 Nh5 0-1

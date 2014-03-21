@@ -1,0 +1,19 @@
+[Event "NED-ch14"]
+[Site "Nijmegen"]
+[Date "1948.??.??"]
+[EventDate "?"]
+[Round "4"]
+[Result "0-1"]
+[White "Johan Teunis Barendregt"]
+[Black "Louis F Stumpers"]
+[ECO "C86"]
+[WhiteElo "?"]
+[BlackElo "?"]
+[PlyCount "52"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O b5 6. Bb3 Be7
+7. Qe2 O-O 8. c3 d5 9. exd5 Bg4 10. dxc6 e4 11. d4 exf3
+12. gxf3 Bh3 13. Re1 Bd6 14. Bg5 h6 15. Bh4 Bf4 16. Qe7 Qc8
+17. Bxf6 Qf5 18. Bh4 Qh5 19. Bd1 Rae8 20. Qxe8 Qxh4 21. Qe7
+Qh5 22. Bc2 f5 23. Re6 Bd6 24. Rxd6 cxd6 25. Qxd6 Qg5+ 26. Kh1
+Qg2# 0-1
