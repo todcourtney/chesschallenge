@@ -666,12 +666,12 @@ class ChessBoard:
         h_file = -1
 
         # handle the special
-        if txt == "O-O":
+        if txt in ["O-O", "O-O+"]:
             if self._turn == 0:
                 return (None,4,7,6,7,None)
             if self._turn == 1:
                 return (None,4,0,6,0,None)
-        if txt == "O-O-O":
+        if txt in ["O-O-O", "O-O-O+"]:
             if self._turn == 0:
                 return (None,4,7,2,7,None)
             if self._turn == 1:
