@@ -1202,7 +1202,7 @@ class ChessBoard:
             if self._fifty == 100:
                 self.endGame(self.FIFTY_MOVES_RULE)
             elif self.threeRepetitions():
-                self.endGame(self.THREE_REPETITION_RULE)
+                pass ##self.endGame(self.THREE_REPETITION_RULE) ## needs to be optional; just ignore for replay purposes and see if draw was actually taken
 
         self.pushState()
         self.pushMove()
