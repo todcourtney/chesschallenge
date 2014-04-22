@@ -1,8 +1,32 @@
 #/usr/bin/env python
 
+## downloader:
+## ~/code/chess/games/www.chessgames.com$ for ID in {1500319..1500700}; do echo $ID; test -f $ID || wget -O $ID "http://www.chessgames.com/perl/nph-chesspgn?text=1&gid=$ID"; sleep 1; done
+
+## even better (5M games):
+## http://icofy-blog.de/icofy-base/
+
+## bulk play:
+## ~/code/chess$ find games/www.chessgames.com/ -maxdepth 1 -type f | sort | xargs -L1 python ChessBoard/ChessReplay.py
+
+## TODO:
+##
+## double-check that three
+##
+
+STOCKFISH = "/home/mschubmehl/code/chess/stockfish-dd-src/src_c11/stockfish"
+
 from ChessBoard import ChessBoard
 import sys
 import re
+import subprocess
+
+def stockfishEval(moves):
+    p = subprocess.Popen([STOCKFISH], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    out, err = p.communicate("position startpos moves " + " ".join(moves) + "\nd\neval\n")
+    assert p.returncode == 0
+    #print [l for l in out.split("\n") if "Total evaluation:" in l]
+    print out
 
 def loadMovesAndResult(filename):
     with open(filename, 'r') as f:
@@ -31,7 +55,7 @@ def loadMovesAndResult(filename):
 def main():
     assert len(sys.argv) == 2
     filename = sys.argv[1]
-    verbose = True
+    verbose = True #False
 
     print filename, " ",
     moves, result = loadMovesAndResult(filename)
@@ -39,12 +63,22 @@ def main():
 
     chess = ChessBoard()
 
+    textMoves = []
     for turn in moves:
         for i, m in enumerate(turn):
             if verbose: print "WB"[i], ":", m
             assert chess.addTextMove(m), chess.getReason()
+            textMoves.append(chess.getLastTextMove(ChessBoard.AN))
 
-            if verbose: chess.printBoard()
+            if verbose:
+                chess.printBoard()
+                print "moves/2 = ", len(textMoves)/2
+                #print chess.getFEN(), "\n"
+            if chess.isGameOver():
+                resultReplay = chess.getGameResult()
+                print "GAME OVER resultReplay =", resultReplay,
+            else:
+                stockfishEval(textMoves)
 
     print result
 
