@@ -28,59 +28,76 @@ def stockfishEval(moves):
     #print [l for l in out.split("\n") if "Total evaluation:" in l]
     print out
 
-def loadMovesAndResult(filename):
-    with open(filename, 'r') as f:
-        lines = [l.strip() for l in f.readlines() if "[" not in l and l.strip() != ""]
-    
-    movesline = (" ".join(lines))
-    moves = re.sub("([0-9]+\\.) *", "\n\\1", movesline).lstrip()
+def loadMovesAndResult(filenames):
+    for filename in filenames:
+        with open(filename, 'r') as f:
+            for i, l in enumerate(f):
+                l = l.strip()
+                if l.startswith("[") or l == "":
+                    lines = []
+                    continue
+                else:
+                    src = "%s:%d" % (filename, i+1)
+                    lines.append(l)
 
-    moves = [m.strip().split(".") for m in moves.split("\n")]
-    n = len(moves)
+                    ## once we have result line, yield this game
+                    if l.endswith("0-1") or l.endswith("1-0") or l.endswith("1/2-1/2"):
+                        movesline = (" ".join(lines))
+                        moves = re.sub("([0-9]+\\.) *", "\n\\1", movesline).lstrip()
 
-    turnNumbers = [int(m[0]) for m in moves]
-    assert turnNumbers == range(1,n+1)
+                        moves = [m.strip().split(".") for m in moves.split("\n")]
+                        n = len(moves)
 
-    moves = [m[1].split(" ") for m in moves]
+                        turnNumbers = [int(m[0]) for m in moves]
+                        assert turnNumbers == range(1,n+1)
 
-    assert len(moves[n-1]) in [2,3] ## black may not have moved, and result should be last
-    result = moves[n-1][-1]
-    assert result in ["1-0", "0-1", "1/2-1/2"]
-    moves[n-1] = moves[n-1][:-1]
+                        moves = [m[1].split(" ") for m in moves]
 
-    assert all(len(m) in [1,2] for m in moves)
+                        assert len(moves[n-1]) in [2,3] ## black may not have moved, and result should be last
+                        result = moves[n-1][-1]
+                        assert result in ["1-0", "0-1", "1/2-1/2"]
+                        moves[n-1] = moves[n-1][:-1]
 
-    return moves, result
+                        assert all(len(m) in [1,2] for m in moves)
+
+                        yield src, moves, result
+                        ##return ## for debugging
+
 
 def main():
-    assert len(sys.argv) == 2
-    filename = sys.argv[1]
-    verbose = True #False
+    assert len(sys.argv) >= 2
+    filenames = sys.argv[1:]
+    verbose = False
 
-    print filename, " ",
-    moves, result = loadMovesAndResult(filename)
-    if verbose: print moves, result
+    for src, moves, result in loadMovesAndResult(filenames):
+        if verbose: print src, moves, result
 
-    chess = ChessBoard()
+        chess = ChessBoard()
+        resultReplay = ""
 
-    textMoves = []
-    for turn in moves:
-        for i, m in enumerate(turn):
-            if verbose: print "WB"[i], ":", m
-            assert chess.addTextMove(m), chess.getReason()
-            textMoves.append(chess.getLastTextMove(ChessBoard.AN))
+        textMoves = []
+        n = 0
+        for i, turn in enumerate(moves):
+            moveNumber = i+1
+            for j, m in enumerate(turn):
+                n += 1
+                colorMoving = "WB"[j]
+                if verbose: print n, " (", colorMoving, "):", m
+                assert chess.addTextMove(m), chess.getReason()
+                textMoves.append(chess.getLastTextMove(ChessBoard.AN))
 
-            if verbose:
-                chess.printBoard()
-                print "moves/2 = ", len(textMoves)/2
-                #print chess.getFEN(), "\n"
-            if chess.isGameOver():
-                resultReplay = chess.getGameResult()
-                print "GAME OVER resultReplay =", resultReplay,
-            else:
-                stockfishEval(textMoves)
+                if verbose:
+                    chess.printBoard()
+                    print "moves/2 = ", len(textMoves)/2
+                if chess.isGameOver():
+                    resultCode = chess.getGameResult()
+                    resultReplay = {1:"WHITE_WIN", 2:"BLACK_WIN", 3:"STALEMATE",4:"FIFTY_MOVES_RULE",5:"THREE_REPETITION_RULE"}[resultCode]
+                else:
+                    pass ##stockfishEval(textMoves)
 
-    print result
+                fen = chess.getFEN()
+
+                print "%(src)s,%(n)d,%(moveNumber)d,%(colorMoving)s,%(m)s,%(fen)s,%(result)s,%(resultReplay)s" % locals()
 
 #this calls the 'main' function when this script is executed
 if __name__ == '__main__': main()
