@@ -21,12 +21,68 @@ import sys
 import re
 import subprocess
 
-def stockfishEval(moves):
-    p = subprocess.Popen([STOCKFISH], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    out, err = p.communicate("position startpos moves " + " ".join(moves) + "\nd\neval\n")
-    assert p.returncode == 0
-    #print [l for l in out.split("\n") if "Total evaluation:" in l]
-    print out
+def getScores(line):
+    cols = [c.strip() for c in line.split("|")]
+    name = cols.pop(0)
+    scores = [float(s) if s != "---" else float("nan") for c in cols for s in c.split()]
+    assert len(scores) == 6
+    scores = dict(zip(("WM", "WE", "BM", "BE", "TM", "TE"), scores))
+    return name, scores
+
+SCORE_HEADERS = [ "Material, PST, Tempo"
+                 ,"  Material imbalance"
+                 ,"               Pawns"
+                 ,"             Knights"
+                 ,"             Bishops"
+                 ,"               Rooks"
+                 ,"              Queens"
+                 ,"            Mobility"
+                 ,"         King safety"
+                 ,"             Threats"
+                 ,"        Passed pawns"
+                 ,"               Space"
+                 ,"               Total"
+                 ]
+
+
+def stockfishEval(moves, verbose=False, empty=False):
+    fen = ""
+    legalMoves = ""
+    scores = dict()
+    pctM =float("nan")
+    pctE1=float("nan")
+    pctE2=float("nan")
+    total=float("nan")
+
+    if not empty:
+        p = subprocess.Popen([STOCKFISH], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        out, err = p.communicate("position startpos moves " + " ".join(moves) + "\nd\neval\n")
+        assert p.returncode == 0
+
+        if verbose: print out
+
+        for l in out.split("\n"):
+            m = re.search("^Fen: (.*)$", l)
+            if m: fen = m.group(1)
+
+            m = re.search("^Legal moves: (.*)$", l)
+            if m: legalMoves = m.group(1)
+
+            if any(l.startswith(h) for h in SCORE_HEADERS):
+                name, s = getScores(l)
+                scores[name] = s
+
+            m = re.search("^Scaling: +([0-9.]+)% MG, +([0-9.]+)% \* +([0-9.]+)% EG.$", l)
+            if m:
+                pctM  = float(m.group(1))
+                pctE1 = float(m.group(2))
+                pctE2 = float(m.group(3))
+
+            m = re.search("Total evaluation: ([0-9.-]+)$", l)
+            if m:
+                total = float(m.group(1))
+
+    return fen, legalMoves, scores, pctM, pctE1, pctE2, total
 
 def loadMovesAndResult(filenames):
     for filename in filenames:
@@ -61,7 +117,6 @@ def loadMovesAndResult(filenames):
                         assert all(len(m) in [1,2] for m in moves)
 
                         yield src, moves, result
-                        ##return ## for debugging
 
 
 def main():
@@ -92,12 +147,14 @@ def main():
                 if chess.isGameOver():
                     resultCode = chess.getGameResult()
                     resultReplay = {1:"WHITE_WIN", 2:"BLACK_WIN", 3:"STALEMATE",4:"FIFTY_MOVES_RULE",5:"THREE_REPETITION_RULE"}[resultCode]
-                else:
-                    pass ##stockfishEval(textMoves)
+
+                ## evaluate using stockfish
+                stockfishFEN, legalMoves, scores, pctM, pctE1, pctE2, total = stockfishEval(textMoves, verbose=verbose)
 
                 fen = chess.getFEN()
+                assert fen == stockfishFEN
 
-                print "%(src)s,%(n)d,%(moveNumber)d,%(colorMoving)s,%(m)s,%(fen)s,%(result)s,%(resultReplay)s" % locals()
+                print "%(src)s,%(n)d,%(moveNumber)d,%(colorMoving)s,%(m)s,%(fen)s,%(result)s,%(resultReplay)s,%(pctM)f,%(pctE1)f,%(pctE2)f,%(total)f" % locals()
 
 #this calls the 'main' function when this script is executed
 if __name__ == '__main__': main()
