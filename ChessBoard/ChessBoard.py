@@ -737,6 +737,8 @@ class ChessBoard:
         ranks = "87654321"
         if format == self.AN:
             res = "%s%s%s%s" % (files[fpos[0]],ranks[fpos[1]],files[tpos[0]],ranks[tpos[1]])
+            if promo is not None:
+                res += promo
         elif format == self.LAN:
 
             if special == self.KING_CASTLE_MOVE:
