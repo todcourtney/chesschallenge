@@ -58,6 +58,13 @@ SCORE_HEADERS = [ "Material, PST, Tempo"
                  ,"               Total"
                  ]
 
+def getStockfishLines(moves, verbose=False):
+    p = subprocess.Popen([STOCKFISH], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    cmds = "position startpos moves " + " ".join(moves) + "\nd\neval\n"
+    out, err = p.communicate(cmds)
+    assert p.returncode == 0
+    if verbose: print out
+    return out.split("\n")
 
 def stockfishEval(moves, verbose=False, empty=False):
     fen = ""
@@ -69,13 +76,7 @@ def stockfishEval(moves, verbose=False, empty=False):
     total=float("nan")
 
     if not empty:
-        p = subprocess.Popen([STOCKFISH], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        out, err = p.communicate("position startpos moves " + " ".join(moves) + "\nd\neval\n")
-        assert p.returncode == 0
-
-        if verbose: print out
-
-        for l in out.split("\n"):
+        for l in getStockfishLines(moves):
             m = re.search("^Fen: (.*)$", l)
             if m: fen = m.group(1)
 
