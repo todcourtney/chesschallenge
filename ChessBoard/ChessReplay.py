@@ -82,6 +82,7 @@ def getStockfishLinesFast(moves, verbose=False):
         l = stockfishProcess.readline().rstrip()
         if l == "readyok":
             stockfishProcess.expect_exact("readyok\r\n")
+            if verbose: print("\n".join(lines))
             return lines
         elif l != "":
             lines.append(l)
@@ -96,7 +97,7 @@ def stockfishEval(moves, verbose=False, empty=False):
     total=float("nan")
 
     if not empty:
-        for l in getStockfishLinesFast(moves):
+        for l in getStockfishLinesFast(moves, verbose=verbose):
             m = re.search("^Fen: (.*)$", l)
             if m: fen = m.group(1)
 
