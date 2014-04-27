@@ -18,13 +18,22 @@
 ## python ChessReplay.py ~/jump/chess/chesschallenge/games/www.chessgames.com/* > temp-out
 ##
 
-#STOCKFISH = "/home/mschubmehl/code/chess/stockfish-dd-src/src_c11/stockfish"
-STOCKFISH = "/Users/matt/jump/chess/stockfish-dd-mac/src/stockfish"
-
 from ChessBoard import ChessBoard
 import sys
 import re
 import subprocess
+import os
+
+def findStockfish():
+    candidates = ["/Users/matt/jump/chess/stockfish-dd-mac/src/stockfish",
+                  "/home/mschubmehl/code/chess/stockfish-dd-src/src_c11/stockfish",
+                  ]
+    for c in candidates:
+        if os.path.isfile(c):
+            return c
+    return "stockfish"
+
+STOCKFISH = findStockfish()
 
 def getScores(line):
     cols = [c.strip() for c in line.split("|")]
