@@ -72,15 +72,16 @@ def getStockfishLinesFast(moves, verbose=False):
     global stockfishProcess
     if stockfishProcess is None:
         stockfishProcess = pexpect.spawn(STOCKFISH)
-        stockfishProcess.expect("Stockfish DD 64 SSE4.2 by Tord Romstad, Marco Costalba and Joona Kiiski\r\n")
+        stockfishProcess.delaybeforesend = 0
+        stockfishProcess.expect_exact("Stockfish DD 64 SSE4.2 by Tord Romstad, Marco Costalba and Joona Kiiski\r\n")
 
     cmds = "position startpos moves " + " ".join(moves) + "\nd\neval\n"
-    stockfishProcess.sendline(cmds + "isready\n")
+    stockfishProcess.send(cmds + "isready\n\n")
     lines = []
     while True:
         l = stockfishProcess.readline().rstrip()
         if l == "readyok":
-            stockfishProcess.expect("readyok\r\n")
+            stockfishProcess.expect_exact("readyok\r\n")
             return lines
         elif l != "":
             lines.append(l)
