@@ -9,12 +9,17 @@
 ## bulk play:
 ## ~/code/chess$ find games/www.chessgames.com/ -maxdepth 1 -type f | sort | xargs -L1 python ChessBoard/ChessReplay.py
 
-## TODO:
 ##
-## double-check that three
+## Analyze chess game files to produce csv
+## of game state and features at each move
+## of each game.
+## 
+## Example usage:
+## python ChessReplay.py ~/jump/chess/chesschallenge/games/www.chessgames.com/* > temp-out
 ##
 
-STOCKFISH = "/home/mschubmehl/code/chess/stockfish-dd-src/src_c11/stockfish"
+#STOCKFISH = "/home/mschubmehl/code/chess/stockfish-dd-src/src_c11/stockfish"
+STOCKFISH = "/Users/matt/jump/chess/stockfish-dd-mac/src/stockfish"
 
 from ChessBoard import ChessBoard
 import sys
@@ -82,6 +87,13 @@ def stockfishEval(moves, verbose=False, empty=False):
             if m:
                 total = float(m.group(1))
 
+    #print 'fen=%s' % fen
+    #print 'legalMoves=%s' % legalMoves
+    #print 'scores=%s' % scores
+    #print 'pctM=%s' % pctM
+    #print 'pctE1=%s' % pctE1
+    #print 'pctE2=%s' % pctE2
+    #print 'total=%s' % total
     return fen, legalMoves, scores, pctM, pctE1, pctE2, total
 
 def loadMovesAndResult(filenames):
@@ -124,11 +136,27 @@ def main():
     filenames = sys.argv[1:]
     verbose = False
 
+    header  = "src,n,moveNumber,colorMoving,move,fen,result,resultReplay"
+    header += ",MaterialPSTTempoTM,MaterialPSTTempoTE"
+    header += ",MaterialImbalanceTM,MaterialImblanceTE"
+    header += ",PawnsTM,PawnsTE"
+    header += ",KnightsWM,KnightsWE,KnightsBM,KnightsBE,KnightsTM,KnightsTE"
+    header += ",BishopsWM,BishopsWE,BishopsBM,BishopsBE,BishopsTM,BishopsTE"
+    header += ",RooksWM,RooksWE,RooksBM,RooksBE,RooksTM,RooksTE"
+    header += ",QueensWM,QueensWE,QueensBM,QueensBE,QueensTM,QueensTE"
+    header += ",MobilityWM,MobilityWE,MobilityBM,MobilityBE,MobilityTM,MobilityTE"
+    header += ",KingSafetyWM,KingSafetyWE,KingSafetyBM,KingSafetyBE,KingSafetyTM,KingSafetyTE"
+    header += ",ThreatsWM,ThreatsWE,ThreatsBM,ThreatsBE,ThreatsTM,ThreatsTE"
+    header += ",PassedPawnsWM,PassedPawnsWE,PassedPawnsBM,PassedPawnsBE,PassedPawnsTM,PassedPawnsTE"
+    header += ",SpaceWM,SpaceWE,SpaceBM,SpaceBE,SpaceTM,SpaceTE"
+    header += ",pctMidGame,pctEndGame1,pctEndGame2,totalScore"
+    print header
+
     for src, moves, result in loadMovesAndResult(filenames):
         if verbose: print src, moves, result
 
         chess = ChessBoard()
-        resultReplay = ""
+        resultReplay = "NA"
 
         textMoves = []
         n = 0
@@ -154,7 +182,23 @@ def main():
                 fen = chess.getFEN()
                 assert fen == stockfishFEN
 
-                print "%(src)s,%(n)d,%(moveNumber)d,%(colorMoving)s,%(m)s,%(fen)s,%(result)s,%(resultReplay)s,%(pctM)f,%(pctE1)f,%(pctE2)f,%(total)f" % locals()
+                row  = "%(src)s,%(n)d,%(moveNumber)d,%(colorMoving)s,%(m)s,%(fen)s,%(result)s,%(resultReplay)s" % locals()
+                s = scores['Material, PST, Tempo']; row += ',%(TM)s,%(TE)s' % s
+                s = scores['Material imbalance'];   row += ',%(TM)s,%(TE)s' % s
+                s = scores['Pawns'];                row += ',%(TM)s,%(TE)s' % s
+                s = scores['Knights'];              row += ',%(WM)s,%(WE)s,%(BM)s,%(BE)s,%(TM)s,%(TE)s' % s
+                s = scores['Bishops'];              row += ',%(WM)s,%(WE)s,%(BM)s,%(BE)s,%(TM)s,%(TE)s' % s
+                s = scores['Rooks'];                row += ',%(WM)s,%(WE)s,%(BM)s,%(BE)s,%(TM)s,%(TE)s' % s
+                s = scores['Queens'];               row += ',%(WM)s,%(WE)s,%(BM)s,%(BE)s,%(TM)s,%(TE)s' % s
+                s = scores['Mobility'];             row += ',%(WM)s,%(WE)s,%(BM)s,%(BE)s,%(TM)s,%(TE)s' % s
+                s = scores['King safety'];          row += ',%(WM)s,%(WE)s,%(BM)s,%(BE)s,%(TM)s,%(TE)s' % s
+                s = scores['Threats'];              row += ',%(WM)s,%(WE)s,%(BM)s,%(BE)s,%(TM)s,%(TE)s' % s
+                s = scores['Passed pawns'];         row += ',%(WM)s,%(WE)s,%(BM)s,%(BE)s,%(TM)s,%(TE)s' % s
+                s = scores['Space'];                row += ',%(WM)s,%(WE)s,%(BM)s,%(BE)s,%(TM)s,%(TE)s' % s
+                row += ",%(pctM)f,%(pctE1)f,%(pctE2)f,%(total)f" % locals()
+                print row
+
+                #print "%(src)s,%(n)d,%(moveNumber)d,%(colorMoving)s,%(m)s,%(fen)s,%(result)s,%(resultReplay)s,%(pctM)f,%(pctE1)f,%(pctE2)f,%(total)f" % locals()
 
 #this calls the 'main' function when this script is executed
 if __name__ == '__main__': main()
