@@ -918,10 +918,10 @@ class ChessBoard:
         turn = (["w","b"])[int(v[0])]
 
         kq = ""
-        if int(v[1]): kq+="K"
-        if int(v[2]): kq+="Q"
-        if int(v[3]): kq+="k"
-        if int(v[4]): kq+="q"
+        if int(v[1]) and self._board[7][7] == "R": kq+="K"
+        if int(v[2]) and self._board[7][0] == "R": kq+="Q"
+        if int(v[3]) and self._board[0][7] == "r": kq+="k"
+        if int(v[4]) and self._board[0][0] == "r": kq+="q"
         if not kq:
             kq = "-"
 
