@@ -632,14 +632,14 @@ class ChessBoard:
 
         fx,fy = fromPos
         if self._turn == self.WHITE:
-            if fx == 0:
+            if fx == 0 and fy == 7:
                 self._white_queen_castle = False
-            if fx == 7:
+            if fx == 7 and fy == 7:
                 self._white_king_castle = False
         if self._turn == self.BLACK:
-            if fx == 0:
+            if fx == 0 and fy == 0:
                 self._black_queen_castle = False
-            if fx == 7:
+            if fx == 7 and fy == 0:
                 self._black_king_castle = False
 
         self.clearEP()
