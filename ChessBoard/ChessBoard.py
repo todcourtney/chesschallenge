@@ -1340,14 +1340,21 @@ class ChessBoard:
         self.redo()
         return res
 
+    def prettyBoardString(self):
+        """
+        Print the current board layout.
+        """
+        s = "  +-----------------+\n"
+        rank = 8
+        for l in self._board:
+            s += "%d | %s %s %s %s %s %s %s %s |\n" % (rank,l[0],l[1],l[2],l[3],l[4],l[5],l[6],l[7])
+            rank-=1
+        s += "  +-----------------+\n"
+        s += "    A B C D E F G H\n"
+        return s
+
     def printBoard(self):
         """
         Print the current board layout.
         """
-        print "  +-----------------+"
-        rank = 8
-        for l in self._board:
-            print "%d | %s %s %s %s %s %s %s %s |" % (rank,l[0],l[1],l[2],l[3],l[4],l[5],l[6],l[7])
-            rank-=1
-        print "  +-----------------+"
-        print "    A B C D E F G H"
+        print self.prettyBoardString()
