@@ -118,58 +118,77 @@ class Book:
             s += fmt % (bs[i][:W], self.prices[i], ss[i][:W]) + "\n"
         return s
 
+##if __name__ == "__main__":
+##    b = Book()
+##
+##    print b.addOrder(Order(1, 10,Order.BUY ,67))
+##    print b.addOrder(Order(2,200,Order.SELL,68))
+##    print b.addOrder(Order(3, 11,Order.BUY ,67))
+##    print b.addOrder(Order(4,201,Order.SELL,68))
+##    print b.addOrder(Order(5, 15,Order.BUY ,67))
+##    print b.addOrder(Order(6, 15,Order.BUY ,68))
+##    print b.addOrder(Order(7,500,Order.BUY ,68))
+##
+##    print b.removeOrder(Order(3, None,Order.BUY ,67))
+##    print b
+##
+##    print b.bid(), "x",  b.ask()
+
+
+
+
+q = Queue.Queue()
+
+class GatewayTCPHandler(SocketServer.BaseRequestHandler):
+    """
+    The RequestHandler class for our server.
+
+    It is instantiated once per connection to the server, and must
+    override the handle() method to implement communication to the
+    client.
+    """
+
+    def handle(self):
+        ## self.request is the TCP socket connected to the client
+        self.data = self.request.recv(1024).strip()
+        print self.client_address, ": ", self.data
+        global q
+        q.put((self.client_address, self.data))
+
+class ThreadingTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer): pass
+
 if __name__ == "__main__":
+    HOST, PORT = "localhost", 9999
+
+    # Create the server, binding to localhost on port 9999
+    server = SocketServer.ThreadingTCPServer((HOST, PORT), GatewayTCPHandler)
+
+    t = threading.Thread(target=server.serve_forever)
+    t.daemon = True
+    t.start()
+
     b = Book()
 
-    print b.addOrder(Order(1, 10,Order.BUY ,67))
-    print b.addOrder(Order(2,200,Order.SELL,68))
-    print b.addOrder(Order(3, 11,Order.BUY ,67))
-    print b.addOrder(Order(4,201,Order.SELL,68))
-    print b.addOrder(Order(5, 15,Order.BUY ,67))
-    print b.addOrder(Order(6, 15,Order.BUY ,68))
-    print b.addOrder(Order(7,500,Order.BUY ,68))
+    oid = 1
+    while True:
+        addr, data = q.get()
+        print "%(addr)s: %(data)s" % locals()
+        events = []
+        if data.startswith("A"):
+            action, qty, side, price = data.split(",")
+            qty   = int(qty)
+            side  = {"B":Order.BUY, "S":Order.SELL}[side]
+            price = int(price)
+            o = Order(oid,qty,side,price)
+            events += b.addOrder(o)
+            oid += 1
+        elif data.startswith("C"):
+            action, oid, qty, side, price = data.split(",")
+            oid   = int(oid)
+            qty   = int(qty)
+            side  = {"B":Order.BUY, "S":Order.SELL}[side]
+            price = int(price)
+            events += b.removeOrder(Order(oid,qty,side,price))
 
-    print b.removeOrder(Order(3, None,Order.BUY ,67))
-    print b
-
-    print b.bid(), "x",  b.ask()
-
-
-##
-##
-##q = Queue.Queue()
-##
-##class GatewayTCPHandler(SocketServer.BaseRequestHandler):
-##    """
-##    The RequestHandler class for our server.
-##
-##    It is instantiated once per connection to the server, and must
-##    override the handle() method to implement communication to the
-##    client.
-##    """
-##
-##    def handle(self):
-##        ## self.request is the TCP socket connected to the client
-##        self.data = self.request.recv(1024).strip()
-##        print self.client_address, ": ", self.data
-##        global q
-##        q.put((self.client_address, self.data))
-##
-##class ThreadingTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer): pass
-##
-##if __name__ == "__main__":
-##    HOST, PORT = "localhost", 9999
-##
-##    # Create the server, binding to localhost on port 9999
-##    server = SocketServer.ThreadingTCPServer((HOST, PORT), GatewayTCPHandler)
-##
-##    t = threading.Thread(target=server.serve_forever)
-##    t.daemon = True
-##    t.start()
-##
-##    while True:
-##        i = q.get()
-##        print i, "START"
-##        time.sleep(10)
-##        print i, "DONE"
-##
+        print events
+        print b
