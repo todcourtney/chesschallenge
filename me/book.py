@@ -74,12 +74,12 @@ class Book:
             if crossingPrice:
                 ro = l.orders[0]
                 if ro.qty <= o.qty:
-                    events.append(("eTradeOrder", ro.oid, ro.qty, ro.price))
+                    events.append(("XT", ro.oid, ro.qty, ro.price))
                     o.qty  -= ro.qty
                     ro.qty  = 0
                     del l.orders[0]
                 else:
-                    events.append(("eTradeOrder", ro.oid,  o.qty, ro.price))
+                    events.append(("XT", ro.oid,  o.qty, ro.price))
                     ro.qty -= o.qty
                     o.qty   = 0
             else:
@@ -88,7 +88,7 @@ class Book:
         ## (2) add this order to the book
         if o.qty > 0:
             (self.bids if o.side == Order.BUY else self.asks)[o.price].orders.append(o)
-            events.append(("eAddOrder", o.oid, o.qty, o.side, o.price))
+            events.append(("XA", o.oid, o.qty, o.side, o.price))
 
         return events
 
@@ -97,7 +97,7 @@ class Book:
         restingOrders = (self.bids if o.side == Order.BUY else self.asks)[o.price].orders
         for ro in restingOrders:
             if ro.oid == o.oid:
-                events.append(("eCancelOrder", ro.oid, ro.qty, ro.side, ro.price))
+                events.append(("XC", ro.oid, ro.qty, ro.side, ro.price))
                 restingOrders.remove(ro)
                 break
         assert len(events) ## for now TODO: cancel rejects
