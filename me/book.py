@@ -109,17 +109,17 @@ class Book:
 
     def cancelOrder(self, oid, owner=None):
         events = []
-        restingOrders = self.oidToPriceLevel[oid].orders
-        for ro in restingOrders:
-            if ro.oid == oid:
-                if owner is None or ro.owner == owner:
-                    events.append(("XC", ro.oid, ro.qty, ro.side, ro.price))
-                    restingOrders.remove(ro)
-                    del self.oidToPriceLevel[oid]
-                    break
-                else:
-                    pass ## should send cancel reject for trying to cancel other owner's order
-
+        if oid in self.oidToPriceLevel:
+            restingOrders = self.oidToPriceLevel[oid].orders
+            for ro in restingOrders:
+                if ro.oid == oid:
+                    if owner is None or ro.owner == owner:
+                        events.append(("XC", ro.oid, ro.qty, ro.side, ro.price))
+                        restingOrders.remove(ro)
+                        del self.oidToPriceLevel[oid]
+                        break
+                    else:
+                        pass ## should send cancel reject for trying to cancel other owner's order
         ## TODO: cancel rejects if order is not found (for now silently ignore)
         return events
 
