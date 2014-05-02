@@ -41,8 +41,9 @@ class Gateway:
         self.outboundThread.start()
 
     def handleInboundMessages(self):
-        m = self.messenger.recvMessage()
-        self.name = m ## for now
+        if self.name is None: ## TODO: make more robust
+            m = self.messenger.recvMessage()
+            self.name = m ## for now
         while True:
             m = self.messenger.recvMessage()
             print "%s.handleInboundMessages() got message '%s'" % (self.name, m)
@@ -50,7 +51,7 @@ class Gateway:
                 self.close()
                 break
             else:
-                if m.startswith("A"):
+                if m.startswith("GA"):
                     m = AddOrderMessage(m, self.oid)
                     self.oid += 1
                 self.inboundQueue.put(m)
@@ -99,5 +100,5 @@ class GatewayCollection:
         with self.lock:
             for g in self.gateways.values(): ## TODO: shuffle for fairness
                 if not g.inboundQueue.empty():
-                    return g.inboundQueue.get(), g.name
+                    return g.inboundQueue.get(), g
         return None, None

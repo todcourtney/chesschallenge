@@ -29,11 +29,11 @@ if __name__ == "__main__":
     b = Book()
 
     while True:
-        m, name = gateways.getIncomingMessage()
+        m, g = gateways.getIncomingMessage()
         if m is None:
             time.sleep(1)
             continue
-        print "MatchingEngine got message from %s: '%s'" % (name, m)
+        print "MatchingEngine got message from %s: '%s'" % (g.name, m)
         events = []
         if isinstance(m, AddOrderMessage):
             o = Order(m.oid,m.qty,m.side,m.price)
@@ -46,5 +46,10 @@ if __name__ == "__main__":
             price = int(price)
             events += b.removeOrder(Order(oid,qty,side,price))
 
-        print events
         print b
+        print events
+        for e in events:
+            g.outboundQueue.put(",".join(str(f) for f in e))
+
+        ## TODO: feed handler
+        pass
