@@ -23,9 +23,10 @@ import gateway
 import sys
 import socket
 
-name = sys.argv[1]
+host = sys.argv[1]
+name = sys.argv[2]
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.connect(('localhost', 9999))
+sock.connect((host, 9999))
 g = gateway.Gateway(sock, name)
 
 g.outboundQueue.put(g.name)

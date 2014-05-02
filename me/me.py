@@ -4,28 +4,14 @@ import threading
 import Queue
 from book import Order, Book
 
-##if __name__ == "__main__":
-##    b = Book()
-##
-##    print b.addOrder(Order(1, 10,Order.BUY ,67))
-##    print b.addOrder(Order(2,200,Order.SELL,68))
-##    print b.addOrder(Order(3, 11,Order.BUY ,67))
-##    print b.addOrder(Order(4,201,Order.SELL,68))
-##    print b.addOrder(Order(5, 15,Order.BUY ,67))
-##    print b.addOrder(Order(6, 15,Order.BUY ,68))
-##    print b.addOrder(Order(7,500,Order.BUY ,68))
-##
-##    print b.removeOrder(Order(3, None,Order.BUY ,67))
-##    print b
-##
-##    print b.bid(), "x",  b.ask()
-
 import gateway
 from gateway import AddOrderMessage
 
+import feed
 
 if __name__ == "__main__":
     gateways = gateway.GatewayCollection()
+    f = feed.Feed()
     b = Book()
 
     while True:
@@ -48,8 +34,11 @@ if __name__ == "__main__":
 
         print b
         print events
+
+        ## response for gateway
         for e in events:
             g.outboundQueue.put(",".join(str(f) for f in e))
 
-        ## TODO: feed handler
-        pass
+        ## feed handler
+        msg = ";".join(",".join(str(f) for f in e) for e in events)
+        f.send(msg)
