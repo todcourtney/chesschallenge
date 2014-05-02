@@ -15,8 +15,7 @@ import messenger
 from book import Order
 
 class AddOrderMessage:
-    def __init__(self, s, oid):
-        self.oid = oid
+    def __init__(self, s):
         add, qty, side, price = s.split(",")
         self.qty = int(qty)
         self.side = {"B":Order.BUY,"S":Order.SELL}[side]
@@ -27,7 +26,6 @@ class AddOrderMessage:
 
 class Gateway:
     def __init__(self, socket, name=None):
-        self.oid = 100*1000 + 1
         self.name = name
         self.messenger = messenger.Messenger(socket)
 
@@ -52,8 +50,7 @@ class Gateway:
                 break
             else:
                 if m.startswith("GA"):
-                    m = AddOrderMessage(m, self.oid)
-                    self.oid += 1
+                    m = AddOrderMessage(m)
                 self.inboundQueue.put(m)
 
     def handleOutboundMessages(self):

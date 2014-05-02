@@ -14,17 +14,19 @@ if __name__ == "__main__":
     f = feed.Feed()
     b = Book()
 
+    newoid = 1
     while True:
         m, g = gateways.getIncomingMessage()
         if m is None:
-            time.sleep(1)
+            time.sleep(0.1)
             continue
         print "MatchingEngine got message from %s: '%s'" % (g.name, m)
         events = []
         if isinstance(m, AddOrderMessage):
-            o = Order(m.oid,m.qty,m.side,m.price)
+            o = Order(newoid,m.qty,m.side,m.price)
+            newoid += 1
             events += b.addOrder(o)
-        elif m.startswith("C"):
+        elif m.startswith("GC"):
             action, oid, qty, side, price = m.split(",")
             oid   = int(oid)
             qty   = int(qty)
