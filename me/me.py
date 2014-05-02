@@ -134,56 +134,31 @@ class Book:
 ##
 ##    print b.bid(), "x",  b.ask()
 
+import gateway
 
-
-
-q = Queue.Queue()
-
-class GatewayTCPHandler(SocketServer.BaseRequestHandler):
-    """
-    The RequestHandler class for our server.
-
-    It is instantiated once per connection to the server, and must
-    override the handle() method to implement communication to the
-    client.
-    """
-
-    def handle(self):
-        ## self.request is the TCP socket connected to the client
-        self.data = self.request.recv(1024).strip()
-        print self.client_address, ": ", self.data
-        global q
-        q.put((self.client_address, self.data))
-
-class ThreadingTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer): pass
 
 if __name__ == "__main__":
-    HOST, PORT = "localhost", 9999
-
-    # Create the server, binding to localhost on port 9999
-    server = SocketServer.ThreadingTCPServer((HOST, PORT), GatewayTCPHandler)
-
-    t = threading.Thread(target=server.serve_forever)
-    t.daemon = True
-    t.start()
-
+    gateways = gateway.GatewayCollection()
     b = Book()
 
     oid = 1
     while True:
-        addr, data = q.get()
-        print "%(addr)s: %(data)s" % locals()
+        m, name = gateways.getIncomingMessage()
+        if m is None:
+            time.sleep(1)
+            continue
+        print "MatchingEngine got message from %s: '%s'" % (name, m)
         events = []
-        if data.startswith("A"):
-            action, qty, side, price = data.split(",")
+        if m.startswith("A"):
+            action, qty, side, price = m.split(",")
             qty   = int(qty)
             side  = {"B":Order.BUY, "S":Order.SELL}[side]
             price = int(price)
             o = Order(oid,qty,side,price)
             events += b.addOrder(o)
             oid += 1
-        elif data.startswith("C"):
-            action, oid, qty, side, price = data.split(",")
+        elif m.startswith("C"):
+            action, oid, qty, side, price = m.split(",")
             oid   = int(oid)
             qty   = int(qty)
             side  = {"B":Order.BUY, "S":Order.SELL}[side]
