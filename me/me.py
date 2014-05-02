@@ -23,12 +23,12 @@ if __name__ == "__main__":
         print "MatchingEngine got message from %s: '%s'" % (g.name, m)
         events = []
         if isinstance(m, AddOrderMessage):
-            o = Order(newoid,m.qty,m.side,m.price)
+            o = Order(newoid,m.qty,m.side,m.price,owner=g.name)
             newoid += 1
             events += b.addOrder(o)
         elif isinstance(m, CancelOrderMessage):
             oid = m.oid
-            events += b.cancelOrder(oid)
+            events += b.cancelOrder(oid,owner=g.name)
 
         print b
         print events

@@ -2,12 +2,13 @@ class Order:
     BUY  =  1
     SELL = -1
 
-    def __init__(self, oid, qty, side, price):
+    def __init__(self, oid, qty, side, price, owner=None):
         assert side in (Order.BUY, Order.SELL)
         self.oid    = oid
         self.qty    = qty
         self.side   = side
         self.price  = price
+        self.owner  = owner
 
     def __str__(self):
         return str(self.qty)
@@ -76,6 +77,13 @@ class Book:
             crossingPrice = (o.side == Order.BUY and l.price <= o.price) or (o.side == Order.SELL and l.price >= o.price)
             if crossingPrice:
                 ro = l.orders[0]
+
+                ## prevent self-match by canceling resting, move to next order
+                if ro.owner == o.owner:
+                    events += self.cancelOrder(ro.oid, owner=o.owner)
+                    continue
+
+                ## know we don't have a self-match at this point
                 if ro.qty <= o.qty:
                     events.append(("XT", ro.oid, ro.qty, ro.price))
                     o.qty  -= ro.qty
@@ -99,16 +107,20 @@ class Book:
 
         return events
 
-    def cancelOrder(self, oid):
+    def cancelOrder(self, oid, owner=None):
         events = []
         restingOrders = self.oidToPriceLevel[oid].orders
         for ro in restingOrders:
             if ro.oid == oid:
-                events.append(("XC", ro.oid, ro.qty, ro.side, ro.price))
-                restingOrders.remove(ro)
-                del self.oidToPriceLevel[oid]
-                break
-        assert len(events) ## for now TODO: cancel rejects
+                if owner is None or ro.owner == owner:
+                    events.append(("XC", ro.oid, ro.qty, ro.side, ro.price))
+                    restingOrders.remove(ro)
+                    del self.oidToPriceLevel[oid]
+                    break
+                else:
+                    pass ## should send cancel reject for trying to cancel other owner's order
+
+        ## TODO: cancel rejects if order is not found (for now silently ignore)
         return events
 
     def __str__(self):
