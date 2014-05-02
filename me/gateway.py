@@ -12,10 +12,22 @@ import socket
 import Queue
 import time
 import messenger
+from book import Order
 
+class AddOrderMessage:
+    def __init__(self, s, oid):
+        self.oid = oid
+        add, qty, side, price = s.split(",")
+        self.qty = int(qty)
+        self.side = {"B":Order.BUY,"S":Order.SELL}[side]
+        self.price = int(price)
+
+    def __str__(self):
+        return "A,%d,%s,%d" % (self.qty, {Order.BUY:"B",Order.SELL:"S"}[self.side], self.price)
 
 class Gateway:
     def __init__(self, socket, name=None):
+        self.oid = 100*1000 + 1
         self.name = name
         self.messenger = messenger.Messenger(socket)
 
@@ -38,6 +50,9 @@ class Gateway:
                 self.close()
                 break
             else:
+                if m.startswith("A"):
+                    m = AddOrderMessage(m, self.oid)
+                    self.oid += 1
                 self.inboundQueue.put(m)
 
     def handleOutboundMessages(self):
@@ -50,7 +65,7 @@ class Gateway:
                 break
 
     def close(self):
-        print self, " close"
+        print self, " close" ## TODO
         ## shut down receiver
         ## send all pending notifications
         ## shut down remaining sockets
