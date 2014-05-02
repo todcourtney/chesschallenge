@@ -22,7 +22,15 @@ class AddOrderMessage:
         self.price = int(price)
 
     def __str__(self):
-        return "A,%d,%s,%d" % (self.qty, {Order.BUY:"B",Order.SELL:"S"}[self.side], self.price)
+        return "GA,%d,%s,%d" % (self.qty, {Order.BUY:"B",Order.SELL:"S"}[self.side], self.price)
+
+class CancelOrderMessage:
+    def __init__(self, s):
+        cancel, oid = s.split(",")
+        self.oid = int(oid)
+
+    def __str__(self):
+        return "GC,%d" % self.oid
 
 class Gateway:
     def __init__(self, socket, name=None):
@@ -51,6 +59,8 @@ class Gateway:
             else:
                 if m.startswith("GA"):
                     m = AddOrderMessage(m)
+                elif m.startswith("GC"):
+                    m = CancelOrderMessage(m)
                 self.inboundQueue.put(m)
 
     def handleOutboundMessages(self):

@@ -5,7 +5,7 @@ import Queue
 from book import Order, Book
 
 import gateway
-from gateway import AddOrderMessage
+from gateway import AddOrderMessage, CancelOrderMessage
 
 import feed
 
@@ -26,13 +26,9 @@ if __name__ == "__main__":
             o = Order(newoid,m.qty,m.side,m.price)
             newoid += 1
             events += b.addOrder(o)
-        elif m.startswith("GC"):
-            action, oid, qty, side, price = m.split(",")
-            oid   = int(oid)
-            qty   = int(qty)
-            side  = {"B":Order.BUY, "S":Order.SELL}[side]
-            price = int(price)
-            events += b.removeOrder(Order(oid,qty,side,price))
+        elif isinstance(m, CancelOrderMessage):
+            oid = m.oid
+            events += b.cancelOrder(oid)
 
         print b
         print events

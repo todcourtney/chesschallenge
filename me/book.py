@@ -34,6 +34,9 @@ class Book:
         self.bids = [PriceLevel(Order.BUY,  p) for p in self.prices]
         self.asks = [PriceLevel(Order.SELL, p) for p in self.prices]
 
+        ## to speed up cancels
+        self.oidToPriceLevel = dict()
+
     def bidLevel(self, level=0):
         n = -1
         for i in reversed(xrange(self.N)):
@@ -87,18 +90,23 @@ class Book:
 
         ## (2) add this order to the book
         if o.qty > 0:
-            (self.bids if o.side == Order.BUY else self.asks)[o.price].orders.append(o)
+            L = (self.bids if o.side == Order.BUY else self.asks)[o.price]
+            L.orders.append(o)
             events.append(("XA", o.oid, o.qty, o.side, o.price))
+
+            ## track for easy cancels later
+            self.oidToPriceLevel[o.oid] = L
 
         return events
 
-    def removeOrder(self, o):
+    def cancelOrder(self, oid):
         events = []
-        restingOrders = (self.bids if o.side == Order.BUY else self.asks)[o.price].orders
+        restingOrders = self.oidToPriceLevel[oid].orders
         for ro in restingOrders:
-            if ro.oid == o.oid:
+            if ro.oid == oid:
                 events.append(("XC", ro.oid, ro.qty, ro.side, ro.price))
                 restingOrders.remove(ro)
+                del self.oidToPriceLevel[oid]
                 break
         assert len(events) ## for now TODO: cancel rejects
         return events
