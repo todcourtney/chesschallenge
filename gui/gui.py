@@ -8,6 +8,8 @@ from ChessBoard import ChessBoard
 chess = ChessBoard()
 
 b = book.FeedBook()
+needRecovery = True
+inRecovery = False
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -35,21 +37,41 @@ try:
         seq, m = m.split(" ", 1)
 
         if m.startswith("N"):
-            chess = ChessBoard()
             b = book.FeedBook()
+            needRecovery = False
+            inRecovery = False
         elif m.startswith("M"):
-            header, move = m.split(",")
-            chess.addTextMove(move)
+            header, move, history = m.split(",")
+            chess = ChessBoard()
+            for h in history.split(" "):
+                chess.addTextMove(h)
+        elif m == "BS":
+            if needRecovery:
+                inRecovery = True
+        elif m.startswith("BR"):
+            if needRecovery and inRecovery:
+                header, recoveryMessages = m.split(",",1)
+                for msg in recoveryMessages.split(";"):
+                    header, oid, qty, side, price = msg.split(",")
+                    o = book.Order(int(oid), int(qty), int(side), int(price))
+                    b.addOrder(o)
+        elif m == "BE":
+            if needRecovery and inRecovery:
+                needRecovery = False
+                inRecovery = False
         elif m.startswith("XA"):
-            header, oid, qty, side, price = m.split(",")
-            o = book.Order(int(oid), int(qty), int(side), int(price))
-            b.addOrder(o)
+            if not needRecovery:
+                header, oid, qty, side, price = m.split(",")
+                o = book.Order(int(oid), int(qty), int(side), int(price))
+                b.addOrder(o)
         elif m.startswith("XC"):
-            header, oid, qty, side, price = m.split(",")
-            b.removeOrder(int(oid))
+            if not needRecovery:
+                header, oid, qty, side, price = m.split(",")
+                b.removeOrder(int(oid))
         elif m.startswith("XT"):
-            header, oid, qty, side, price = m.split(",")
-            b.applyTrade(int(oid), int(qty))
+            if not needRecovery:
+                header, oid, qty, side, price = m.split(",")
+                b.applyTrade(int(oid), int(qty))
         else:
             stdscr.addstr(1,0,"UNKNOWN MESSAGE")
             time.sleep(5)

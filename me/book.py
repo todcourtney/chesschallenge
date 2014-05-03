@@ -123,6 +123,13 @@ class Book:
         ## TODO: cancel rejects if order is not found (for now silently ignore)
         return events
 
+    def getStateForRecoveryMessage(self):
+        events = []
+        for L in self.bids + self.asks:
+            for o in L.orders:
+                events.append(("XA", o.oid, o.qty, o.side, o.price))
+        return events
+
     def __str__(self):
         bs = [str(l) for l in self.bids]
         ss = [str(l) for l in self.asks]
