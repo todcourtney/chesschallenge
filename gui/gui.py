@@ -10,6 +10,8 @@ chess = ChessBoard()
 b = book.FeedBook()
 needRecovery = True
 inRecovery = False
+prevSeq = None
+drops = 0
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -33,18 +35,27 @@ try:
 
     while True:
         m = sock.recv(feed.Feed.MAX_SIZE)
-        stdscr.addstr(0,40, m)
         seq, m = m.split(" ", 1)
+        seq = int(seq)
 
-        if m.startswith("N"):
+        drop = prevSeq is not None and (seq > prevSeq+1)
+        drops += drop
+        stdscr.addstr(0,40, "Drops: %d needRecovery: %s" % (drops, needRecovery))
+        stdscr.refresh()
+
+        if m.startswith("N") or drop:
             b = book.FeedBook()
             needRecovery = False
             inRecovery = False
+            chessResult = ""
         elif m.startswith("M"):
             header, move, history = m.split(",")
             chess = ChessBoard()
             for h in history.split(" "):
                 chess.addTextMove(h)
+            chessResult = ""
+        elif m.startswith("R"):
+            header, chessResult = m.split(",")
         elif m == "BS":
             if needRecovery:
                 inRecovery = True
@@ -73,7 +84,8 @@ try:
                 header, oid, qty, side, price = m.split(",")
                 b.applyTrade(int(oid), int(qty))
         else:
-            stdscr.addstr(1,0,"UNKNOWN MESSAGE")
+            stdscr.addstr(1,0,"UNKNOWN MESSAGE: '%s'" % m)
+            stdscr.refresh()
             time.sleep(5)
 
         bid = b.bid()
@@ -93,8 +105,11 @@ try:
         H = 20
         ladderPad.refresh(100-center-H/2,0, 5,5+5+25, 5+H,5+5+25+70)
 
-        boardPad.addstr(0,0,chess.prettyBoardString())
+        boardPad.addstr(1,5,chessResult)
+        boardPad.addstr(1,0,chess.prettyBoardString())
         boardPad.refresh(0,0, 5,5, 5+15,5+25)
+
+        prevSeq = seq
 
 finally:
     curses.nocbreak()
