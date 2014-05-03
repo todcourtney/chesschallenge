@@ -8,8 +8,6 @@ from ChessBoard import ChessBoard
 chess = ChessBoard()
 
 b = book.FeedBook()
-needRecovery = True
-inRecovery = False
 prevSeq = None
 drops = 0
 
@@ -24,7 +22,12 @@ stdscr = curses.initscr()
 
 curses.noecho()
 curses.cbreak()
+curses.curs_set(0)
 stdscr.keypad(1)
+
+gameId = ""
+chessResult=""
+messages = []
 
 try:
     ladderPad = curses.newpad(105, 70)
@@ -35,58 +38,32 @@ try:
 
     while True:
         m = sock.recv(feed.Feed.MAX_SIZE)
+        messages.append(m)
         seq, m = m.split(" ", 1)
         seq = int(seq)
 
         drop = prevSeq is not None and (seq > prevSeq+1)
         drops += drop
-        stdscr.addstr(0,40, "Drops: %d needRecovery: %s" % (drops, needRecovery))
+        stdscr.addstr(0,40, "Drops: %d needRecovery: %s" % (drops, b.needRecovery))
+        stdscr.addstr(40,0, "\n".join("%-50s" % msg[:50] for msg in messages[-20:]))
         stdscr.refresh()
 
         if m.startswith("N") or drop:
+            if m.startswith("N"):
+                header, gameId = m.split(",")
             b = book.FeedBook()
-            needRecovery = False
-            inRecovery = False
             chessResult = ""
         elif m.startswith("M"):
-            header, move, history = m.split(",")
+            header, gameId, move, history = m.split(",")
             chess = ChessBoard()
             for h in history.split(" "):
                 chess.addTextMove(h)
             chessResult = ""
         elif m.startswith("R"):
-            header, chessResult = m.split(",")
-        elif m == "BS":
-            if needRecovery:
-                inRecovery = True
-        elif m.startswith("BR"):
-            if needRecovery and inRecovery:
-                header, recoveryMessages = m.split(",",1)
-                for msg in recoveryMessages.split(";"):
-                    header, oid, qty, side, price = msg.split(",")
-                    o = book.Order(int(oid), int(qty), int(side), int(price))
-                    b.addOrder(o)
-        elif m == "BE":
-            if needRecovery and inRecovery:
-                needRecovery = False
-                inRecovery = False
-        elif m.startswith("XA"):
-            if not needRecovery:
-                header, oid, qty, side, price = m.split(",")
-                o = book.Order(int(oid), int(qty), int(side), int(price))
-                b.addOrder(o)
-        elif m.startswith("XC"):
-            if not needRecovery:
-                header, oid, qty, side, price = m.split(",")
-                b.removeOrder(int(oid))
-        elif m.startswith("XT"):
-            if not needRecovery:
-                header, oid, qty, side, price = m.split(",")
-                b.applyTrade(int(oid), int(qty))
+            header, gameId, chessResult = m.split(",")
         else:
-            stdscr.addstr(1,0,"UNKNOWN MESSAGE: '%s'" % m)
-            stdscr.refresh()
-            time.sleep(5)
+            ## all other messages are to update the book
+            b.processMessage(m)
 
         bid = b.bid()
         ask = b.ask()
@@ -109,9 +86,12 @@ try:
         boardPad.addstr(1,0,chess.prettyBoardString())
         boardPad.refresh(0,0, 5,5, 5+15,5+25)
 
+        stdscr.addstr(1,0,"Game ID: %s" % gameId)
+        stdscr.refresh()
         prevSeq = seq
 
 finally:
+    curses.curs_set(2)
     curses.nocbreak()
     stdscr.keypad(0)
     curses.echo()

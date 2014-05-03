@@ -16,13 +16,14 @@ from book import Order
 
 class AddOrderMessage:
     def __init__(self, s):
-        add, qty, side, price = s.split(",")
+        add, gameId, qty, side, price = s.split(",")
+        self.gameId = gameId
         self.qty = int(qty)
         self.side = {"B":Order.BUY,"S":Order.SELL}[side]
         self.price = int(price)
 
     def __str__(self):
-        return "GA,%d,%s,%d" % (self.qty, {Order.BUY:"B",Order.SELL:"S"}[self.side], self.price)
+        return "GA,%s,%d,%s,%d" % (self.gameId, self.qty, {Order.BUY:"B",Order.SELL:"S"}[self.side], self.price)
 
 class CancelOrderMessage:
     def __init__(self, s):
@@ -57,11 +58,15 @@ class Gateway:
                 self.close()
                 break
             else:
-                if m.startswith("GA"):
-                    m = AddOrderMessage(m)
-                elif m.startswith("GC"):
-                    m = CancelOrderMessage(m)
-                self.inboundQueue.put(m)
+                try:
+                    if m.startswith("GA"):
+                        m = AddOrderMessage(m)
+                    elif m.startswith("GC"):
+                        m = CancelOrderMessage(m)
+                except ValueError as e:
+                    print "WARNING: conversion problem parsing message '%s'" % m
+                else:
+                    self.inboundQueue.put(m)
 
     def handleOutboundMessages(self):
         while True:
