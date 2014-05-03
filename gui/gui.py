@@ -105,7 +105,7 @@ try:
         H = 20
         ladderPad.refresh(100-center-H/2,0, 5,5+5+25, 5+H,5+5+25+70)
 
-        boardPad.addstr(1,5,chessResult)
+        boardPad.addstr(0,3,"%-10s"%chessResult)
         boardPad.addstr(1,0,chess.prettyBoardString())
         boardPad.refresh(0,0, 5,5, 5+15,5+25)
 
