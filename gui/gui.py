@@ -1,11 +1,20 @@
 import curses
 import time
 import random
+import socket, struct
 
+import book, feed
 from ChessBoard import ChessBoard
 chess = ChessBoard()
 
 b = book.FeedBook()
+
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+sock.bind(('', feed.Feed.MCAST_PORT))
+mreq = struct.pack("4sl", socket.inet_aton(feed.Feed.MCAST_GRP), socket.INADDR_ANY)
+
+sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
 stdscr = curses.initscr()
 
@@ -14,22 +23,21 @@ curses.cbreak()
 stdscr.keypad(1)
 
 try:
-    ladderPad = curses.newpad(100, 100)
-    boardPad  = curses.newpad(30, 30)
+    ladderPad = curses.newpad(105, 70)
+    boardPad  = curses.newpad(15, 25)
 
     stdscr.addstr("Chess Trading GUI")
     stdscr.refresh()
 
-    ask = 5
-
-    moves = "e4 c5 Nf3 e6 d4 cxd4 Nxd4 a6 Bd3 Nf6 O-O Qc7 Qe2 d6 c4 g6 Nc3 Bg7 Nf3 O-O Bf4 Nc6 Rac1 e5 Bg5 h6 Be3 Bg4 Nd5 Qd8 h3 Nxd5 cxd5 Nd4 Bxd4 Bxf3 Qxf3 exd4 Rc4 Rc8 Rfc1 Rxc4 Rxc4 h5 Qd1 Be5 Qc1 Qf6 Rc7 Rb8 a4 Kg7 b4 h4 Kf1 Bf4 Qd1 Qd8 Rc4 Rc8 a5 Rxc4 Bxc4 Qf6 Be2 Be5 Bf3 Qd8 Qc2 b6 axb6 Qxb6 Qc4 d3".split()
-    
     while True:
         m = sock.recv(feed.Feed.MAX_SIZE)
-        stdscr.addstr(0, 40, m)
+        stdscr.addstr(0,40, m)
         seq, m = m.split(" ", 1)
 
-        if m.startswith("M"):
+        if m.startswith("N"):
+            chess = ChessBoard()
+            b = book.FeedBook()
+        elif m.startswith("M"):
             header, move = m.split(",")
             chess.addTextMove(move)
         elif m.startswith("XA"):
@@ -43,33 +51,28 @@ try:
             header, oid, qty, side, price = m.split(",")
             b.applyTrade(int(oid), int(qty))
         else:
-            break
+            stdscr.addstr(1,0,"UNKNOWN MESSAGE")
+            time.sleep(5)
 
-        ladderPad.addstr(0,0,b)
+        bid = b.bid()
+        ask = b.ask()
+        if ask is None and bid is None:
+            center = 50
+        elif ask is None:
+            center = bid
+        elif bid is None:
+            center = ask
+        else:
+            center = int((bid+ask)/2.0)
 
-        ask = random.randrange(max(ask-1,1), min(ask+1,9)+1)
-        for row,prc in enumerate(reversed(xrange(10+1))):
-            bidqty = random.randrange(1,50) if prc <  ask else ""
-            askqty = random.randrange(1,50) if prc >= ask else ""
-            try:
-                ladderPad.addstr(row,10,"%10s %02d %-10s" % (bidqty, int(prc), askqty))
-            except curses.error:
-                pass
-            
+        ladderPad.addstr(0,0,str(b))
+
         #  Displays a section of the pad in the middle of the screen
-        ladderPad.refresh(0,0, 5,5, 20,40)
+        H = 20
+        ladderPad.refresh(100-center-H/2,0, 5,5+5+25, 5+H,5+5+25+70)
 
         boardPad.addstr(0,0,chess.prettyBoardString())
-        boardPad.refresh(0,0, 5,45, 35,75)
-
-        # now get input
-        c = stdscr.getch()
-        if c == ord('q'):
-            break
-
-        if len(moves):
-            m = moves.pop(0)
-            chess.addTextMove(m)
+        boardPad.refresh(0,0, 5,5, 5+15,5+25)
 
 finally:
     curses.nocbreak()
