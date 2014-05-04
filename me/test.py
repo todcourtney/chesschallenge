@@ -1,41 +1,27 @@
-##import sys
-##import time
-##import socket
-##import messenger
-##from gateway import GatewayCollection
-##
-##if sys.argv[1] == "server":
-##    print "building GatewayCollection()"
-##    gs = GatewayCollection()
-##    print "GatewayCollection() running"
-##    while True: time.sleep(1)
-##else:
-##    name = sys.argv[1]
-##    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-##    sock.connect(('localhost', 9999))
-##    c = messenger.Messenger(sock)
-##    c.sendMessage(name)
-##    c.sendMessage("message1")
-##    c.sendMessage("message2")
-
-
 import gateway
 import sys
 import socket
+import time
 
 host = sys.argv[1]
 name = sys.argv[2]
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 sock.connect((host, 9999))
+
+print "Starting gateway named", name
 g = gateway.Gateway(sock, name)
 
 g.outboundQueue.put(g.name)
 while True:
+    time.sleep(0.1)
     print "input message: ",
     m = sys.stdin.readline().rstrip()
+    if m == "": break
     g.outboundQueue.put(m)
 
     while not g.inboundQueue.empty():
         print "inbound: ",
         m = g.inboundQueue.get()
         print m
+
+print "EXIT"
