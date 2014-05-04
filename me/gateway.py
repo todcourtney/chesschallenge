@@ -98,6 +98,7 @@ class GatewayCollection:
         self.socket.listen(20)
 
         self.thread = threading.Thread(target=self.acceptGatewayConnections)
+        self.thread.daemon = True
         self.thread.start()
 
     def acceptGatewayConnections(self):
