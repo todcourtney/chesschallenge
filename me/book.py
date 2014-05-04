@@ -191,6 +191,7 @@ class FeedBook:
 
 
     def processMessage(self, m):
+        "Applys message and returns True if this message affected the book (or completed a recovery)."
         if self.needRecovery:
             if m == "BS":
                 self.inRecovery = True
@@ -203,17 +204,22 @@ class FeedBook:
             elif m == "BE" and self.inRecovery:
                 self.needRecovery = False
                 self.inRecovery   = False
+                return True
         else:
             if m.startswith("XA"):
                 header, orderGameId, oid, qty, side, price = m.split(",")
                 o = Order(int(oid), int(qty), int(side), int(price))
                 self.addOrder(o)
+                return True
             elif m.startswith("XC"):
                 header, orderGameId, oid, qty, side, price = m.split(",")
                 self.removeOrder(int(oid))
+                return True
             elif m.startswith("XT"):
                 header, orderGameId, oid, qty, side, price = m.split(",")
                 self.applyTrade(int(oid), int(qty))
+                return True
+        return False
 
     def addOrder(self, o):
         L = (self.bids if o.side == Order.BUY else self.asks)[o.price]
