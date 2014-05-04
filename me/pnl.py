@@ -36,21 +36,28 @@ class Pnl:
     def __init__(self, filename):
         self.events = []
         self.lock = threading.Lock()
-        self.f = open(filename, 'r')
+        self.filename = filename
         self.thread = threading.Thread(target=self.keepEventsUpToDate)
         self.thread.daemon = True
         self.thread.start()
 
     def keepEventsUpToDate(self):
+        f = None
         while True:
-            where = self.f.tell()
-            line = self.f.readline()
-            if not line:
-                self.f.seek(where)
-                time.sleep(0.1)
+            if f is None and os.path.isfile(self.filename):
+                f = open(self.filename, 'r')
+
+            if f is not None:
+                where = f.tell()
+                line = f.readline()
+                if not line:
+                    f.seek(where)
+                    time.sleep(0.1)
+                else:
+                    with self.lock:
+                        self.events.append(tuple(line.rstrip().split(",")))
             else:
-                with self.lock:
-                    self.events.append(tuple(line.rstrip().split(",")))
+                time.sleep(1)
 
     def getPnl(self):
         pos  = dict()
@@ -70,17 +77,17 @@ class Pnl:
                 tm = float(e[2])
 
                 if e[0] == "M":
-                    mark = int(e[7])
+                    mark = float(e[7])
                 elif e[0] == "T":
                     owner = e[3]
-                    qty   = int(e[5])
-                    side  = int(e[6])
-                    price = int(e[7])
+                    qty   =   int(e[5])
+                    side  =   int(e[6])
+                    price = float(e[7])
                     pos [owner] = pos .get(owner,0) + qty*side
                     cash[owner] = cash.get(owner,0) - qty*side*price
                     vol [owner] = vol .get(owner,0) + qty
                 elif e[0] == "S":
-                    price = int(e[7])
+                    price = float(e[7])
                     for owner in pos:
                         sqty = -pos[owner]
                         pos [owner] += sqty
@@ -105,7 +112,7 @@ def leaderboardFromSummary(pnls):
         pnlIfWhiteWinsStr  = locale.format("%10d", pnlIfWhiteWins , grouping=True)
         pnlIfWhiteLosesStr = locale.format("%10d", pnlIfWhiteLoses, grouping=True)
         lines.append((pnl, "%(pnlStr)11s %(o)-10s %(vol)10d %(pnlIfWhiteWinsStr)11s %(pnlIfWhiteLosesStr)11s " % locals()))
-        header = "%11s %-10s %10s %11s %11s" % ("pnl", "owner", "volume", "pnl(win)", "pnl(lose)")
+    header = "%11s %-10s %10s %11s %11s" % ("pnl", "owner", "volume", "pnl(win)", "pnl(lose)")
     lines = sorted(lines, key = lambda x: -x[0])
     return "\n".join([header] + [l[1] for l in lines])
 
