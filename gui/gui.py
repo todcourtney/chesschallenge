@@ -2,8 +2,9 @@ import curses
 import time
 import random
 import socket, struct
+import sys
 
-import book, feed
+import book, feed, pnl
 from ChessBoard import ChessBoard
 chess = ChessBoard()
 
@@ -29,9 +30,13 @@ gameId = ""
 chessResult=""
 messages = []
 
+p = pnl.Pnl(sys.argv[1])
+
 try:
     ladderPad = curses.newpad(105, 70)
     boardPad  = curses.newpad(15, 25)
+    logPad    = curses.newpad(20, 52)
+    pnlPad    = curses.newpad(20, 72)
 
     stdscr.addstr("Chess Trading GUI")
     stdscr.refresh()
@@ -45,8 +50,19 @@ try:
         drop = prevSeq is not None and (seq > prevSeq+1)
         drops += drop
         stdscr.addstr(0,40, "Drops: %d needRecovery: %s" % (drops, b.needRecovery))
-        stdscr.addstr(40,0, "\n".join("%-50s" % msg[:50] for msg in messages[-20:]))
+
+        stdscr.addstr(38,0, "Feed Messages:")
+        logPad.addstr(0,0, "\n".join("%-50s" % msg[:50] for msg in messages[-20:]))
+        messages = messages[-20:] ## discard old
+        logPad.refresh(0,0, 40,0, 60,52)
+
+        stdscr.addstr(38,55, "Pnl Events:")
+        with p.lock:
+            pnlPad.addstr(0,0, "\n".join("%-70s" % str(e)[:70] for e in p.events[-20:]))
+        pnlPad.refresh(0,0, 40,55, 60,55+72)
+
         stdscr.refresh()
+
 
         if m.startswith("N") or drop:
             if m.startswith("N"):
