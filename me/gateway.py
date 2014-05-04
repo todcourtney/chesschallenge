@@ -44,6 +44,9 @@ class Gateway:
         self.inboundThread  = threading.Thread(target=self.handleInboundMessages )
         self.outboundThread = threading.Thread(target=self.handleOutboundMessages)
 
+        self.inboundThread.daemon = True
+        self.outboundThread.daemon = True
+
         self.inboundThread.start()
         self.outboundThread.start()
 
