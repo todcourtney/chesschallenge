@@ -56,13 +56,10 @@ try:
         messages = messages[-20:] ## discard old
         logPad.refresh(0,0, 40,0, 60,52)
 
-        stdscr.addstr(38,55, "Pnl Events:")
-        with p.lock:
-            pnlPad.addstr(0,0, "\n".join("%-70s" % str(e)[:70] for e in p.events[-20:]))
+        pnlPad.addstr(0,0, pnl.leaderboardFromSummary(p.getPnl()))
         pnlPad.refresh(0,0, 40,55, 60,55+72)
 
         stdscr.refresh()
-
 
         if m.startswith("N") or drop:
             if m.startswith("N"):

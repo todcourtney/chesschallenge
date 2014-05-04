@@ -2,6 +2,8 @@ import os
 import csv
 import threading
 import time
+import locale
+locale.setlocale(locale.LC_ALL, "")
 
 class PnlEvents:
     def __init__(self, filename):
@@ -61,14 +63,11 @@ class Pnl:
             for e in self.events:
                 gameId = e[1]
                 if gameId != prevGameId:
-                    print
                     assert all(p == 0 for p in pos.values())
                     mark = None
                     prevGameId = gameId
 
                 tm = float(e[2])
-
-                print tm, mark, e
 
                 if e[0] == "M":
                     mark = int(e[7])
@@ -94,6 +93,21 @@ class Pnl:
 
         return pnl
 
+def leaderboardFromSummary(pnls):
+    lines = []
+    for o, r in pnls.iteritems():
+        lastLine = r[-1]
+        gameId,tm,vol,pnl,cash,mv,pos,mark = lastLine
+        pnlIfWhiteWins  = cash + pos*100
+        pnlIfWhiteLoses = cash
+        o = o[:20]
+        pnlStr             = locale.format("%10d", pnl            , grouping=True)
+        pnlIfWhiteWinsStr  = locale.format("%10d", pnlIfWhiteWins , grouping=True)
+        pnlIfWhiteLosesStr = locale.format("%10d", pnlIfWhiteLoses, grouping=True)
+        lines.append((pnl, "%(pnlStr)11s %(o)-10s %(vol)10d %(pnlIfWhiteWinsStr)11s %(pnlIfWhiteLosesStr)11s " % locals()))
+        header = "%11s %-10s %10s %11s %11s" % ("pnl", "owner", "volume", "pnl(win)", "pnl(lose)")
+    lines = sorted(lines, key = lambda x: -x[0])
+    return "\n".join([header] + [l[1] for l in lines])
 
 ## for testing
 if __name__ == "__main__":
@@ -105,3 +119,5 @@ if __name__ == "__main__":
             print k
             for r in v:
                 print "  ", r
+
+        print leaderboardFromSummary(z)
