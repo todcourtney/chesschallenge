@@ -91,15 +91,15 @@ class Book:
                 tm = time.time()
                 if ro.qty <= o.qty:
                     events.append(("XT", ro.gameId, ro.oid, ro.qty, ro.side, ro.price))
-                    pnlTrades.append(("T", tm, ro.owner, ro.gameId, ro.oid, ro.qty, ro.side, ro.price))
-                    pnlTrades.append(("T", tm,  o.owner,  o.gameId,  o.oid, ro.qty,  o.side, ro.price))
+                    pnlTrades.append(("T", ro.gameId, tm, ro.owner, ro.oid, ro.qty, ro.side, ro.price))
+                    pnlTrades.append(("T",  o.gameId, tm,  o.owner,  o.oid, ro.qty,  o.side, ro.price))
                     o.qty  -= ro.qty
                     ro.qty  = 0
                     del l.orders[0]
                 else:
                     events.append(("XT", ro.gameId, ro.oid,  o.qty, ro.side, ro.price))
-                    pnlTrades.append(("T", tm, ro.owner, ro.gameId, ro.oid,  o.qty, ro.side, ro.price))
-                    pnlTrades.append(("T", tm,  o.owner,  o.gameId,  o.oid,  o.qty,  o.side, ro.price))
+                    pnlTrades.append(("T", ro.gameId, tm, ro.owner, ro.oid,  o.qty, ro.side, ro.price))
+                    pnlTrades.append(("T",  o.gameId, tm,  o.owner,  o.oid,  o.qty,  o.side, ro.price))
                     ro.qty -= o.qty
                     o.qty   = 0
             else:
@@ -191,7 +191,6 @@ class FeedBook:
 
 
     def processMessage(self, m):
-        print m
         if self.needRecovery:
             if m == "BS":
                 self.inRecovery = True

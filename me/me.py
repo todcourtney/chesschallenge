@@ -1,13 +1,13 @@
-import SocketServer
+import sys
 import time
 import threading
 import Queue
-from book import Order, Book
 
+from book import Order, Book
 import gateway
 from gateway import AddOrderMessage, CancelOrderMessage
-
 import feed
+import pnl
 
 chessgame = {"moves":"e4 c5 Nf3 e6 d4 cxd4 Nxd4 a6 Bd3 Nf6 O-O Qc7 Qe2 d6 c4 g6 Nc3 Bg7 Nf3 O-O Bf4 Nc6 Rac1 e5 Bg5 h6 Be3 Bg4 Nd5 Qd8 h3 Nxd5 cxd5 Nd4 Bxd4 Bxf3 Qxf3 exd4 Rc4 Rc8 Rfc1 Rxc4 Rxc4 h5 Qd1 Be5 Qc1 Qf6 Rc7 Rb8 a4 Kg7 b4 h4 Kf1 Bf4 Qd1 Qd8 Rc4 Rc8 a5 Rxc4 Bxc4 Qf6 Be2 Be5 Bf3 Qd8 Qc2 b6 axb6 Qxb6 Qc4 d3".split(" "), "result":"1/2-1/2", "gameId":'150'}
 n = 0
@@ -46,12 +46,14 @@ class RecoveryBuilder:
             self.reset()
 
 if __name__ == "__main__":
+    pnlFilename = sys.argv[1]
+
     gateways = gateway.GatewayCollection()
     f = feed.Feed()
     f.send("N,%s" % chessgame['gameId'])
     b = Book()
     r = RecoveryBuilder(b,f)
-    pnlEvents = []
+    pnlEvents = pnl.PnlEvents(pnlFilename)
     oldMark = None
 
     newoid = 1
@@ -63,7 +65,10 @@ if __name__ == "__main__":
                 f.send(moveMessage)
                 n += 1
             else:
+                pnlEvents.append(("S", chessgame['gameId'], time.time(), "", "", "", "", 100 if chessgame['result'] == '1-0' else 0))
+                print pnlEvents
                 f.send("R,%s,%s" % (chessgame['gameId'], chessgame['result']))
+                print "Waiting 10 sec to start next game..."
                 time.sleep(10)
 
                 ## TODO: load new game
@@ -93,8 +98,8 @@ if __name__ == "__main__":
             o = Order(newoid,m.qty,m.side,m.price,owner=g.name,gameId=m.gameId)
             newoid += 1
             newEvents, newPnlEvents = b.addOrder(o)
-            events    += newEvents
-            pnlEvents += newPnlEvents
+            events   .extend(newEvents)
+            pnlEvents.extend(newPnlEvents)
         elif isinstance(m, CancelOrderMessage):
             oid = m.oid
             events += b.cancelOrder(oid,owner=g.name)
@@ -108,7 +113,7 @@ if __name__ == "__main__":
         else                            : mark = (bid+ask)/2.0
 
         if mark != oldMark:
-            pnlEvents.append(("M",mark))
+            pnlEvents.append(("M", chessgame['gameId'], time.time(), "", "", "", "", mark))
             oldMark = mark
 
         print b
