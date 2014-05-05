@@ -1,7 +1,6 @@
 import curses
 import time
 import random
-import socket, struct
 import sys
 
 import book, feed, pnl
@@ -12,12 +11,9 @@ b = book.FeedBook()
 prevSeq = None
 drops = 0
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-sock.bind(('', feed.Feed.MCAST_PORT))
-mreq = struct.pack("4sl", socket.inet_aton(feed.Feed.MCAST_GRP), socket.INADDR_ANY)
+f = feed.Feed(send=False, receive=True)
 
-sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+p = pnl.Pnl(sys.argv[1])
 
 stdscr = curses.initscr()
 
@@ -30,8 +26,6 @@ gameId = ""
 chessResult=""
 messages = []
 
-p = pnl.Pnl(sys.argv[1])
-
 try:
     ladderPad = curses.newpad(105, 70)
     boardPad  = curses.newpad(15, 25)
@@ -42,13 +36,10 @@ try:
     stdscr.refresh()
 
     while True:
-        m = sock.recv(feed.Feed.MAX_SIZE)
-        messages.append(m)
-        seq, m = m.split(" ", 1)
-        seq = int(seq)
-
-        drop = prevSeq is not None and (seq > prevSeq+1)
+        msg, seq, drop, m = f.recv()
+        messages.append(msg)
         drops += drop
+
         stdscr.addstr(0,40, "Drops: %d needRecovery: %-5s" % (drops, b.needRecovery))
 
         stdscr.addstr(38,0, "Feed Messages:")
