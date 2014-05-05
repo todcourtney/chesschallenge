@@ -1,16 +1,24 @@
 import socket
 import struct
+import threading
+
+class Listener:
+    def onFeedMessage(rawMessage, seq, drop, message):
+        pass
 
 class Feed:
     MCAST_GRP = '224.1.1.1'
     MCAST_PORT = 5007
     MAX_SIZE = 2048
 
-    def __init__(self, send=True, receive=False, thread=False):
+    def __init__(self, send=True, receive=False, thread=False, listeners=None):
         self.sendSocket    = None
         self.receiveSocket = None
         self.sendSeq = 0
         self.receiveSeq = None
+        self.listeners = listeners if listeners is not None else []
+        for L in self.listeners:
+            assert isinstance(L, Listener)
 
         if send:
             self.sendSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
@@ -24,7 +32,9 @@ class Feed:
             self.receiveSocket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
         if thread:
-            raise NotImplementedError("need to add threading")
+            self.thread = threading.Thread(target=self.run)
+            self.thread.daemon = True
+            self.thread.start()
 
     def send(self, msg):
         msg = "%08d %s" % (self.sendSeq, msg)
@@ -42,3 +52,10 @@ class Feed:
         self.receiveSeq = seq
 
         return msg, seq, drop, m
+
+    def run(self):
+        while True:
+            msg, seq, drop, m = self.recv()
+            for L in self.listeners:
+                L.onFeedMessage(msg, seq, drop, m)
+

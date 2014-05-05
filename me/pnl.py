@@ -14,7 +14,7 @@ class PnlEvents:
             print "Reading PnlEvents from file", filename
             self.f = open(filename, 'r+', 1)
             self.events = [tuple(e) for e in csv.reader(self.f, delimiter=",")]        
-            print "PnlEvents:", self.events
+            ##print "PnlEvents:", self.events
         else:
             self.f = open(filename, 'w', 1)
 
