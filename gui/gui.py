@@ -49,7 +49,7 @@ try:
 
         drop = prevSeq is not None and (seq > prevSeq+1)
         drops += drop
-        stdscr.addstr(0,40, "Drops: %d needRecovery: %s" % (drops, b.needRecovery))
+        stdscr.addstr(0,40, "Drops: %d needRecovery: %-5s" % (drops, b.needRecovery))
 
         stdscr.addstr(38,0, "Feed Messages:")
         logPad.addstr(0,0, "\n".join("%-50s" % msg[:50] for msg in messages[-20:]))
