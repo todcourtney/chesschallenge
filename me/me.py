@@ -3,7 +3,7 @@ import time
 import threading
 import Queue
 
-from book import Order, MatchingBook
+from book import Order, MatchingBook, FeedBook
 import gateway
 from gateway import AddOrderMessage, CancelOrderMessage
 import feed
@@ -44,14 +44,21 @@ class RecoveryBuilder:
             for rm in recoveryMessageList:
                 self.f.send(rm)
             self.reset()
+            return recoveryMessageList
 
 if __name__ == "__main__":
     pnlFilename = sys.argv[1]
 
+    debugFeedBook = True
+
     gateways = gateway.GatewayCollection()
     f = feed.Feed()
-    f.send("N,%s" % chessgame['gameId'])
     b = MatchingBook()
+    newMsg = "N,%s" % chessgame['gameId']
+    f.send(newMsg)
+    if debugFeedBook:
+        fb = FeedBook()
+        fb.processMessage(newMsg)
     r = RecoveryBuilder(b,f)
     pnlEvents = pnl.PnlEvents(pnlFilename)
     oldMark = None
@@ -67,22 +74,31 @@ if __name__ == "__main__":
             else:
                 pnlEvents.append(("S", chessgame['gameId'], time.time(), "", "", "", "", 100 if chessgame['result'] == '1-0' else 0))
                 print pnlEvents
-                f.send("R,%s,%s" % (chessgame['gameId'], chessgame['result']))
-                print "Waiting 10 sec to start next game..."
-                time.sleep(10)
+                resultMsg = "R,%s,%s" % (chessgame['gameId'], chessgame['result'])
+                f.send(resultMsg)
+                if debugFeedBook: fb.processMessage(resultMsg)
+                print "Waiting 5 sec to start next game..."
+                time.sleep(5)
 
                 ## TODO: load new game
                 chessgame = {"moves":"e4 c5 Nf3 e6 d4 cxd4 Nxd4 a6 Bd3 Nf6 O-O Qc7 Qe2 d6 c4 g6 Nc3 Bg7 Nf3 O-O Bf4 Nc6 Rac1 e5 Bg5 h6 Be3 Bg4 Nd5 Qd8 h3 Nxd5 cxd5 Nd4 Bxd4 Bxf3 Qxf3 exd4 Rc4 Rc8 Rfc1 Rxc4 Rxc4 h5 Qd1 Be5 Qc1 Qf6 Rc7 Rb8 a4 Kg7 b4 h4 Kf1 Bf4 Qd1 Qd8 Rc4 Rc8 a5 Rxc4 Bxc4 Qf6 Be2 Be5 Bf3 Qd8 Qc2 b6 axb6 Qxb6 Qc4 d3".split(" "), "result":"1/2-1/2", "gameId":str(int(chessgame['gameId'])+1)}
                 n = 0
 
-                f.send("N,%s" % chessgame['gameId'])
+                newMsg = "N,%s" % chessgame['gameId']
+                f.send(newMsg)
                 b = MatchingBook() ## TODO: should send out cancels for everybody's orders?
+                if debugFeedBook: fb.processMessage(newMsg)
                 r = RecoveryBuilder(b,f)
                 oldMark = None
             nextMove = time.time() + speed
 
         ## send recovery messages if needed
-        r.sendIfNeeded()
+        recoveryMessages = r.sendIfNeeded()
+        if debugFeedBook:
+            if recoveryMessages is not None:
+                for rm in recoveryMessages:
+                    print "FB REPLAY:", rm
+                    fb.processMessage(rm)
 
         ## try to get and process one message
         m, g = gateways.getIncomingMessage()
@@ -116,9 +132,9 @@ if __name__ == "__main__":
             pnlEvents.append(("M", chessgame['gameId'], time.time(), "", "", "", "", mark))
             oldMark = mark
 
-        print b
-        print events
-        print pnlEvents
+        ##print b
+        ##print events
+        ##print pnlEvents
 
         ## response for gateway
         for e in events:
@@ -127,3 +143,15 @@ if __name__ == "__main__":
         ## feed handler
         msg = ";".join(",".join(str(f) for f in e) for e in events)
         f.send(msg)
+        if debugFeedBook:
+            print "FB MESSAGE:", msg
+            fb.processMessage(msg)
+
+        ## now check that the local book and reconstructed book look the same
+        if debugFeedBook:
+            x = str(b ).split("\n")
+            y = str(fb).split("\n")
+            assert len(x) == len(y)
+            z = "\n".join(xx + "  " + (" " if xx == yy else "X") + "   " + yy for xx,yy in zip(x,y))
+            print z
+            assert x == y or (fb.bid() is None and fb.ask() is None)
