@@ -59,18 +59,28 @@ class Pnl:
             else:
                 time.sleep(1)
 
+    def doSettlement(self, pos, cash, price):
+        for owner in pos:
+            sqty = -pos[owner]
+            if sqty != 0:
+                pos [owner] += sqty
+                cash[owner] -= sqty*price
+
     def getPnl(self):
         pos  = dict()
         vol  = dict()
         cash = dict()
         pnl  = dict()
 
+        mark = None
         prevGameId = None
         with self.lock:
             for e in self.events:
                 gameId = e[1]
                 if gameId != prevGameId:
-                    assert all(p == 0 for p in pos.values())
+                    if mark is not None:
+                        self.doSettlement(pos, cash, mark) ## settle to mark if we didn't see a settle (mid-game matching engine failure)
+                    assert all(p == 0 for p in pos.values()), "at transition from gameId = %s to %s, some positions are not zero" % (prevGameId, gameId)
                     mark = None
                     prevGameId = gameId
 
@@ -88,10 +98,7 @@ class Pnl:
                     vol [owner] = vol .get(owner,0) + qty
                 elif e[0] == "S":
                     price = float(e[7])
-                    for owner in pos:
-                        sqty = -pos[owner]
-                        pos [owner] += sqty
-                        cash[owner] -= sqty*price
+                    self.doSettlement(pos, cash, price)
 
                 for owner in pos:
                     mv = 0 if pos[owner] == 0 else pos[owner]*mark
