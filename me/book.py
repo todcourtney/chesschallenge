@@ -1,4 +1,5 @@
 import time
+import sys
 
 class Order:
     BUY  =  1
@@ -29,7 +30,7 @@ class PriceLevel:
         else:
             return " ".join(str(o) for o in          self.orders )
 
-class Book:
+class MatchingBook:
     def __init__(self):
         self.prices = range(0,101)
         self.N      = len(self.prices)
@@ -193,8 +194,12 @@ class FeedBook:
     def processMessage(self, m):
         "Applys message and returns True if this message affected the book (or completed a recovery)."
         if self.needRecovery:
-            if m == "BS":
+            if m.startswith("N"):
+                self.needRecovery = False
+                self.clear()
+            elif m == "BS":
                 self.inRecovery = True
+                self.clear()
             elif m.startswith("BR") and self.inRecovery:
                 header, recoveryMessages = m.split(",",1)
                 for msg in recoveryMessages.split(";"):
@@ -205,24 +210,31 @@ class FeedBook:
                 self.needRecovery = False
                 self.inRecovery   = False
                 return True
-        else:
-            if m.startswith("XA"):
-                header, orderGameId, oid, qty, side, price = m.split(",")
-                o = Order(int(oid), int(qty), int(side), int(price))
-                self.addOrder(o)
-                return True
-            elif m.startswith("XC"):
-                header, orderGameId, oid, qty, side, price = m.split(",")
-                self.removeOrder(int(oid))
-                return True
-            elif m.startswith("XT"):
-                header, orderGameId, oid, qty, side, price = m.split(",")
-                self.applyTrade(int(oid), int(qty))
-                return True
+        elif m.startswith("X"):
+            for subm in m.split(";"):
+                if subm.startswith("XA"):
+                    header, orderGameId, oid, qty, side, price = subm.split(",")
+                    o = Order(int(oid), int(qty), int(side), int(price))
+                    self.addOrder(o)
+                    return True
+                elif subm.startswith("XC"):
+                    header, orderGameId, oid, qty, side, price = subm.split(",")
+                    self.removeOrder(int(oid))
+                    return True
+                elif subm.startswith("XT"):
+                    header, orderGameId, oid, qty, side, price = subm.split(",")
+                    self.applyTrade(int(oid), int(qty))
+                    return True
         return False
 
     def addOrder(self, o):
         L = (self.bids if o.side == Order.BUY else self.asks)[o.price]
+        bid = self.bid()
+        ask = self.ask()
+        if bid is not None and ask is not None and bid >= ask:
+            s = "book just became crossed because of addOrder with oid %d:\n" % o.oid
+            s += str(self)
+            raise RuntimeError(s)
         L.orders.append(o)
 
         ## track for easy cancels later
@@ -247,6 +259,11 @@ class FeedBook:
                 else:
                     ro.qty -= qty
                 break
+
+    def clear(self):
+        self.oidToPriceLevel = dict()
+        for L in self.bids + self.asks:
+            L.orders = []
 
     def __str__(self):
         bs = [str(l) for l in self.bids]

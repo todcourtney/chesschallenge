@@ -3,7 +3,7 @@ import time
 import threading
 import Queue
 
-from book import Order, Book
+from book import Order, MatchingBook
 import gateway
 from gateway import AddOrderMessage, CancelOrderMessage
 import feed
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     gateways = gateway.GatewayCollection()
     f = feed.Feed()
     f.send("N,%s" % chessgame['gameId'])
-    b = Book()
+    b = MatchingBook()
     r = RecoveryBuilder(b,f)
     pnlEvents = pnl.PnlEvents(pnlFilename)
     oldMark = None
@@ -76,7 +76,7 @@ if __name__ == "__main__":
                 n = 0
 
                 f.send("N,%s" % chessgame['gameId'])
-                b = Book() ## TODO: should send out cancels for everybody's orders?
+                b = MatchingBook() ## TODO: should send out cancels for everybody's orders?
                 r = RecoveryBuilder(b,f)
                 oldMark = None
             nextMove = time.time() + speed
