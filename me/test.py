@@ -4,16 +4,14 @@ import socket
 import time
 import random
 
-host = sys.argv[1]
-name = sys.argv[2]
-test = sys.argv[3] if len(sys.argv) > 3 else "manual"
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-sock.connect((host, 9999))
+from book import Order
+
+name = sys.argv[1]
+test = sys.argv[2] if len(sys.argv) > 2 else "manual"
 
 print "Starting gateway named", name
-g = gateway.Gateway(sock, name)
+g = gateway.Gateway(name=name)
 
-g.outboundQueue.put(g.name)
 while True:
     if test == "manual":
         time.sleep(0.1)
@@ -25,16 +23,13 @@ while True:
     elif test == "random":
         time.sleep(0.5)
         prc  = random.randint(45,55)
-        side = random.choice(("B","S"))
+        side = random.choice((Order.BUY, Order.SELL))
         qty  = random.randint(1,10)
 
         for gameId in xrange(150,160):
-            m = "GA,%(gameId)d,%(qty)d,%(side)s,%(prc)d" % locals()
-            g.outboundQueue.put(m)
+            g.addOrder(gameId, qty, side, prc)
 
-    while not g.inboundQueue.empty():
-        print "inbound: ",
-        m = g.inboundQueue.get()
-        print m
+    for m in g.getMessages():
+        print "inbound:", m
 
 print "EXIT"
