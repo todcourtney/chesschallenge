@@ -40,13 +40,13 @@ class Strategy(gateway.Listener, feed.Listener):
     def __init__(self, name):
         self.gateway = Gateway(name, self) ## TODO: will need to move socket creation inside, and sending of initial identification message
         self.feed    = Feed(self) ## TODO: rename existing Feed to FeedPublisher, handle multicast setup in constructor, handle drops
-        self.book    = Book() ## TODO: rename Book -> MatchingEngineBook
+        self.book    = Book()
         self.board   = ChessBoard()
 
     def onGatewayMessage(self, message):
         pass
 
-    def onFeedMessage(self, message):
+    def onFeedMessage(self, rawMessage, seq, drop, message):
         """
         Get feed message, decide whether it is a book update or a chess message,
         and pass to the appropriate callback.

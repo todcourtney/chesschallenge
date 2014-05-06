@@ -150,7 +150,7 @@ class MatchingBook:
             s += fmt % (bs[i][:W], self.prices[i], ss[i][:W]) + "\n"
         return s
 
-class FeedBook:
+class Book:
     def __init__(self):
         self.prices = range(0,101)
         self.N      = len(self.prices)

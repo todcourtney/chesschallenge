@@ -3,7 +3,7 @@ import time
 import threading
 import Queue
 
-from book import Order, MatchingBook, FeedBook
+from book import Order, MatchingBook, Book
 import gateway
 from gateway import AddOrderMessage, CancelOrderMessage
 import feed
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     newMsg = "N,%s" % chessgame['gameId']
     f.send(newMsg)
     if debugFeedBook:
-        fb = FeedBook()
+        fb = Book()
         fb.processMessage(newMsg)
     r = RecoveryBuilder(b,f)
     pnlEvents = pnl.PnlEvents(pnlFilename)

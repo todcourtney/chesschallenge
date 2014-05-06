@@ -7,7 +7,7 @@ import book, feed, pnl
 from ChessBoard import ChessBoard
 chess = ChessBoard()
 
-b = book.FeedBook()
+b = book.Book()
 prevSeq = None
 drops = 0
 
@@ -55,7 +55,7 @@ try:
         if m.startswith("N") or drop:
             if m.startswith("N"):
                 header, gameId = m.split(",")
-            b = book.FeedBook()
+            b = book.Book()
             chessResult = ""
         elif m.startswith("M"):
             header, gameId, move, history = m.split(",")
