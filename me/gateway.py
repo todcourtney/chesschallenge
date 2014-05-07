@@ -15,7 +15,11 @@ from book import Order
 import re
 import os
 
-class AddOrderMessage:
+class GatewayMessage:
+    pass
+
+class AddOrderMessage(GatewayMessage):
+    code = "GA"
     def __init__(self, gameId, qty, side, price):
         self.gameId = gameId
         self.qty    = qty
@@ -25,30 +29,32 @@ class AddOrderMessage:
     @classmethod
     def fromstr(cls, s):
         add, gameId, qty, side, price = s.split(",")
-        assert add == "GA"
+        assert add == cls.code
         qty    = int(qty)
         side   = {"B":Order.BUY,"S":Order.SELL}[side]
         price  = int(price)
         return cls(gameId, qty, side, price)
 
     def __str__(self):
-        return "GA,%s,%d,%s,%d" % (self.gameId, self.qty, {Order.BUY:"B",Order.SELL:"S"}[self.side], self.price)
+        return "%s,%s,%d,%s,%d" % (AddOrderMessage.code, self.gameId, self.qty, {Order.BUY:"B",Order.SELL:"S"}[self.side], self.price)
 
-class CancelOrderMessage:
+class CancelOrderMessage(GatewayMessage):
+    code = "GC"
     def __init__(self, oid):
         self.oid = oid
 
     @classmethod
     def fromstr(cls, s):
         cancel, oid = s.split(",")
-        assert cancel == "GC"
+        assert cancel == cls.code
         oid = int(oid)
         return cls(oid)
 
     def __str__(self):
-        return "GC,%d" % self.oid
+        return "%s,%d" % (CancelOrderMessage.code, self.oid)
 
-class LoginMessage:
+class LoginMessage(GatewayMessage):
+    code = "GN"
     def __init__(self, name):
         assert re.match("^[0-9A-Za-z]{3,8}$", name), "names must consist of between 3 and 8 characters from [0-9A-Za-z], not '%s'" % name
         self.name = name
@@ -56,11 +62,11 @@ class LoginMessage:
     @classmethod
     def fromstr(cls, s):
         login, name = s.split(",")
-        assert login == "GN"
+        assert login == cls.code
         return cls(name)
 
     def __str__(self):
-        return "GN,%s" % (self.name)
+        return "%s,%s" % (LoginMessage.code, self.name)
 
 class Messenger:
     SIZE = 32
