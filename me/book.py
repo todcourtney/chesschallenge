@@ -225,10 +225,13 @@ class Book:
     def processMessage(self, m):
         "Applies message and returns True if this message affected the book (or completed a recovery)."
 
+        ## allow str or message for now by normalizing to string
+        m = str(m)
+
         ## when a game starts, we don't need recovery, but we have to clear old orders
-        if m.startswith("R"):
+        if m.startswith("CR"):
             self.clear()
-        elif m.startswith("N"):
+        elif m.startswith("CN"):
             self.needRecovery = False
             self.clear()
 

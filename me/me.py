@@ -8,8 +8,9 @@ import gateway
 from gateway import AddOrderMessage, CancelOrderMessage
 import feed
 import pnl
+import chessgame
 
-chessgame = {"moves":"e4 c5 Nf3 e6 d4 cxd4 Nxd4 a6 Bd3 Nf6 O-O Qc7 Qe2 d6 c4 g6 Nc3 Bg7 Nf3 O-O Bf4 Nc6 Rac1 e5 Bg5 h6 Be3 Bg4 Nd5 Qd8 h3 Nxd5 cxd5 Nd4 Bxd4 Bxf3 Qxf3 exd4 Rc4 Rc8 Rfc1 Rxc4 Rxc4 h5 Qd1 Be5 Qc1 Qf6 Rc7 Rb8 a4 Kg7 b4 h4 Kf1 Bf4 Qd1 Qd8 Rc4 Rc8 a5 Rxc4 Bxc4 Qf6 Be2 Be5 Bf3 Qd8 Qc2 b6 axb6 Qxb6 Qc4 d3".split(" "), "result":"1/2-1/2", "gameId":'150'}
+game = chessgame.ChessGame(gameId = 150, result = "1/2-1/2", moves="e4 c5 Nf3 e6 d4 cxd4 Nxd4 a6 Bd3 Nf6 O-O Qc7 Qe2 d6 c4 g6 Nc3 Bg7 Nf3 O-O Bf4 Nc6 Rac1 e5 Bg5 h6 Be3 Bg4 Nd5 Qd8 h3 Nxd5 cxd5 Nd4 Bxd4 Bxf3 Qxf3 exd4 Rc4 Rc8 Rfc1 Rxc4 Rxc4 h5 Qd1 Be5 Qc1 Qf6 Rc7 Rb8 a4 Kg7 b4 h4 Kf1 Bf4 Qd1 Qd8 Rc4 Rc8 a5 Rxc4 Bxc4 Qf6 Be2 Be5 Bf3 Qd8 Qc2 b6 axb6 Qxb6 Qc4 d3".split(" "))
 n = 0
 speed = 1
 nextMove = time.time() + speed
@@ -54,7 +55,7 @@ if __name__ == "__main__":
     gateways = gateway.GatewayCollection()
     f = feed.Feed()
     b = MatchingBook()
-    newMsg = "N,%s" % chessgame['gameId']
+    newMsg = game.newMessage()
     f.send(newMsg)
     if debugFeedBook:
         fb = Book()
@@ -66,25 +67,25 @@ if __name__ == "__main__":
     newoid = 1
     while True:
         if time.time() > nextMove:
-            if n < len(chessgame['moves']):
-                moveMessage = "M,%s,%s,%s" % (chessgame['gameId'], chessgame['moves'][n], " ".join(chessgame['moves'][:(n+1)]))
+            if n < len(game.moves):
+                moveMessage = game.moveMessage(n)
                 print "moveMessage = '%s'" % moveMessage
                 f.send(moveMessage)
                 n += 1
             else:
-                pnlEvents.append(("S", chessgame['gameId'], time.time(), "", "", "", "", 100 if chessgame['result'] == '1-0' else 0))
-                print pnlEvents
-                resultMsg = "R,%s,%s" % (chessgame['gameId'], chessgame['result'])
+                pnlEvents.append(("S", game.gameId, time.time(), "", "", "", "", 100 if game.whiteWins() else 0))
+                ##print pnlEvents
+                resultMsg = game.resultMessage()
                 f.send(resultMsg)
                 if debugFeedBook: fb.processMessage(resultMsg)
                 print "Waiting 5 sec to start next game..."
                 time.sleep(5)
 
                 ## TODO: load new game
-                chessgame = {"moves":"e4 c5 Nf3 e6 d4 cxd4 Nxd4 a6 Bd3 Nf6 O-O Qc7 Qe2 d6 c4 g6 Nc3 Bg7 Nf3 O-O Bf4 Nc6 Rac1 e5 Bg5 h6 Be3 Bg4 Nd5 Qd8 h3 Nxd5 cxd5 Nd4 Bxd4 Bxf3 Qxf3 exd4 Rc4 Rc8 Rfc1 Rxc4 Rxc4 h5 Qd1 Be5 Qc1 Qf6 Rc7 Rb8 a4 Kg7 b4 h4 Kf1 Bf4 Qd1 Qd8 Rc4 Rc8 a5 Rxc4 Bxc4 Qf6 Be2 Be5 Bf3 Qd8 Qc2 b6 axb6 Qxb6 Qc4 d3".split(" "), "result":"1/2-1/2", "gameId":str(int(chessgame['gameId'])+1)}
+                game = chessgame.ChessGame(gameId = str(int(game.gameId)+1), result = "1/2-1/2", moves="e4 c5 Nf3 e6 d4 cxd4 Nxd4 a6 Bd3 Nf6 O-O Qc7 Qe2 d6 c4 g6 Nc3 Bg7 Nf3 O-O Bf4 Nc6 Rac1 e5 Bg5 h6 Be3 Bg4 Nd5 Qd8 h3 Nxd5 cxd5 Nd4 Bxd4 Bxf3 Qxf3 exd4 Rc4 Rc8 Rfc1 Rxc4 Rxc4 h5 Qd1 Be5 Qc1 Qf6 Rc7 Rb8 a4 Kg7 b4 h4 Kf1 Bf4 Qd1 Qd8 Rc4 Rc8 a5 Rxc4 Bxc4 Qf6 Be2 Be5 Bf3 Qd8 Qc2 b6 axb6 Qxb6 Qc4 d3".split(" "))
                 n = 0
 
-                newMsg = "N,%s" % chessgame['gameId']
+                newMsg = game.newMessage()
                 f.send(newMsg)
                 b = MatchingBook() ## TODO: should send out cancels for everybody's orders?
                 if debugFeedBook: fb.processMessage(newMsg)
@@ -105,8 +106,8 @@ if __name__ == "__main__":
         if m is None:
             time.sleep(0.1)
             continue
-        elif m.gameId != chessgame['gameId']:
-            print "WARNING: MatchingEngine dropping message not for this game (%s) from %s: '%s'" % (chessgame['gameId'], g.name, m)
+        elif m.gameId != game.gameId:
+            print "WARNING: MatchingEngine dropping message not for this game (%s) from %s: '%s'" % (game.gameId, g.name, m)
             continue
         print "MatchingEngine got message from %s: '%s'" % (g.name, m)
         events = []
@@ -129,7 +130,7 @@ if __name__ == "__main__":
         else                            : mark = (bid+ask)/2.0
 
         if mark != oldMark:
-            pnlEvents.append(("M", chessgame['gameId'], time.time(), "", "", "", "", mark))
+            pnlEvents.append(("M", game.gameId, time.time(), "", "", "", "", mark))
             oldMark = mark
 
         ##print b

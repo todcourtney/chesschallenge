@@ -52,18 +52,18 @@ try:
 
         stdscr.refresh()
 
-        if m.startswith("N") or drop:
-            if m.startswith("N"):
+        if m.startswith("CN") or drop:
+            if m.startswith("CN"):
                 header, gameId = m.split(",")
             b = book.Book()
             chessResult = ""
-        elif m.startswith("M"):
+        elif m.startswith("CM"):
             header, gameId, move, history = m.split(",")
             chess = ChessBoard()
             for h in history.split(" "):
                 chess.addTextMove(h)
             chessResult = ""
-        elif m.startswith("R"):
+        elif m.startswith("CR"):
             header, gameId, chessResult = m.split(",")
         else:
             ## all other messages are to update the book

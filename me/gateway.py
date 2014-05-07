@@ -16,7 +16,17 @@ import re
 import os
 
 class GatewayMessage:
-    pass
+    def __init__(self):
+        raise NotImplementedError("cannot instantiate GatewayMessage base class")
+
+    @classmethod
+    def fromstr(cls, s):
+        code, rest = s.split(",", 1)
+        if   code ==    AddOrderMessage.code: return    AddOrderMessage.fromstr(s)
+        elif code == CancelOrderMessage.code: return CancelOrderMessage.fromstr(s)
+        elif code ==       LoginMessage.code: return       LoginMessage.fromstr(s)
+        else:
+            raise ValueError("no message type has code '%s'" % s)
 
 class AddOrderMessage(GatewayMessage):
     code = "GA"
@@ -175,10 +185,7 @@ class Gateway:
                 break
             else:
                 try:
-                    if m.startswith("GA"):
-                        m = AddOrderMessage.fromstr(m)
-                    elif m.startswith("GC"):
-                        m = CancelOrderMessage.fromstr(m)
+                    m = GatewayMessage.fromstr(m)
                 except ValueError as e:
                     print "WARNING: conversion problem parsing message '%s'" % m
                 else:
