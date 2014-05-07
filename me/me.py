@@ -31,7 +31,7 @@ class RecoveryBuilder:
             recoveryMessage = None
             messages = self.b.getStateForRecoveryMessage()
             for r in messages:
-                rs = ",".join(str(field) for field in r)
+                rs = str(r)
                 recoveryMessageExpanded = recoveryMessage + ";" + rs if recoveryMessage is not None else rs
                 if len(recoveryMessageExpanded) + 15 < feed.Feed.MAX_SIZE:
                     recoveryMessage = recoveryMessageExpanded
@@ -138,10 +138,10 @@ if __name__ == "__main__":
 
         ## response for gateway
         for e in events:
-            g.outboundQueue.put(",".join(str(f) for f in e))
+            g.send(e)
 
         ## feed handler
-        msg = ";".join(",".join(str(f) for f in e) for e in events)
+        msg = ";".join(str(e) for e in events)
         f.send(msg)
         if debugFeedBook:
             print "FB MESSAGE:", msg

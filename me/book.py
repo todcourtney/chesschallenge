@@ -17,6 +17,37 @@ class Order:
     def __str__(self):
         return str(self.qty)
 
+class ExchangeMessage:
+    def __init__(self, gameId, oid, qty, side, price):
+        assert hasattr(self,'code'), "you cannot instantiate ExchangeMessage directly"
+        self.gameId = gameId
+        self.oid    = oid
+        self.qty    = qty
+        self.side   = side
+        self.price  = price
+
+    @classmethod
+    def fromstr(cls, s):
+        code, gameId, oid, qty, side, price = s.split(",")
+        assert code == cls.code
+        oid    = int(oid)
+        qty    = int(qty)
+        side   = {"B":Order.BUY,"S":Order.SELL}[side]
+        price  = int(price)
+        return cls(gameId, oid, qty, side, price)
+
+    def __str__(self):
+        return "%s,%s,%d,%d,%s,%d" % (self.code, self.gameId, self.oid, self.qty, {Order.BUY:"B",Order.SELL:"S"}[self.side], self.price)
+
+class ExchangeAddOrderMessage(ExchangeMessage):
+    code = "XA"
+
+class ExchangeCancelOrderMessage(ExchangeMessage):
+    code = "XC"
+
+class ExchangeTradeMessage(ExchangeMessage):
+    code = "XT"
+
 class PriceLevel:
     def __init__(self, side, price):
         assert side in (Order.BUY, Order.SELL)
@@ -91,14 +122,14 @@ class MatchingBook:
                 ## know we don't have a self-match at this point
                 tm = time.time()
                 if ro.qty <= o.qty:
-                    events.append(("XT", ro.gameId, ro.oid, ro.qty, ro.side, ro.price))
+                    events.append(ExchangeTradeMessage(ro.gameId, ro.oid, ro.qty, ro.side, ro.price))
                     pnlTrades.append(("T", ro.gameId, tm, ro.owner, ro.oid, ro.qty, ro.side, ro.price))
                     pnlTrades.append(("T",  o.gameId, tm,  o.owner,  o.oid, ro.qty,  o.side, ro.price))
                     o.qty  -= ro.qty
                     ro.qty  = 0
                     del l.orders[0]
                 else:
-                    events.append(("XT", ro.gameId, ro.oid,  o.qty, ro.side, ro.price))
+                    events.append(ExchangeTradeMessage(ro.gameId, ro.oid,  o.qty, ro.side, ro.price))
                     pnlTrades.append(("T", ro.gameId, tm, ro.owner, ro.oid,  o.qty, ro.side, ro.price))
                     pnlTrades.append(("T",  o.gameId, tm,  o.owner,  o.oid,  o.qty,  o.side, ro.price))
                     ro.qty -= o.qty
@@ -110,7 +141,7 @@ class MatchingBook:
         if o.qty > 0:
             L = (self.bids if o.side == Order.BUY else self.asks)[o.price]
             L.orders.append(o)
-            events.append(("XA", o.gameId, o.oid, o.qty, o.side, o.price))
+            events.append(ExchangeAddOrderMessage(o.gameId, o.oid, o.qty, o.side, o.price))
 
             ## track for easy cancels later
             self.oidToPriceLevel[o.oid] = L
@@ -124,7 +155,7 @@ class MatchingBook:
             for ro in restingOrders:
                 if ro.oid == oid:
                     if owner is None or ro.owner == owner:
-                        events.append(("XC", ro.gameId, ro.oid, ro.qty, ro.side, ro.price))
+                        events.append(ExchangeCancelOrderMessage(ro.gameId, ro.oid, ro.qty, ro.side, ro.price))
                         restingOrders.remove(ro)
                         del self.oidToPriceLevel[oid]
                         break
@@ -137,7 +168,7 @@ class MatchingBook:
         events = []
         for L in self.bids + self.asks:
             for o in L.orders:
-                events.append(("XA", o.oid, o.qty, o.side, o.price))
+                events.append(ExchangeAddOrderMessage(o.gameId, o.oid, o.qty, o.side, o.price))
         return events
 
     def __str__(self):
@@ -209,8 +240,8 @@ class Book:
             elif m.startswith("BR") and self.inRecovery:
                 header, recoveryMessages = m.split(",",1)
                 for msg in recoveryMessages.split(";"):
-                    header, oid, qty, side, price = msg.split(",")
-                    o = Order(int(oid), int(qty), int(side), int(price))
+                    xm = ExchangeAddOrderMessage.fromstr(msg)
+                    o = Order(xm.oid, xm.qty, xm.side, xm.price)
                     self.addOrder(o)
             elif m == "BE" and self.inRecovery:
                 self.needRecovery = False
@@ -218,16 +249,17 @@ class Book:
                 return True
         elif m.startswith("X"):
             for subm in m.split(";"):
-                if subm.startswith("XA"):
-                    header, orderGameId, oid, qty, side, price = subm.split(",")
-                    o = Order(int(oid), int(qty), int(side), int(price))
+                code, rest = subm.split(",", 1)
+                if code == ExchangeAddOrderMessage.code:
+                    xm = ExchangeAddOrderMessage.fromstr(subm)
+                    o = Order(xm.oid, xm.qty, xm.side, xm.price)
                     self.addOrder(o)
-                elif subm.startswith("XC"):
-                    header, orderGameId, oid, qty, side, price = subm.split(",")
-                    self.removeOrder(int(oid))
-                elif subm.startswith("XT"):
-                    header, orderGameId, oid, qty, side, price = subm.split(",")
-                    self.applyTrade(int(oid), int(qty))
+                elif code == ExchangeCancelOrderMessage.code:
+                    xm = ExchangeCancelOrderMessage.fromstr(subm)
+                    self.removeOrder(xm.oid)
+                elif code == ExchangeTradeMessage.code:
+                    xm = ExchangeTradeMessage.fromstr(subm)
+                    self.applyTrade(xm.oid, xm.qty)
             return True
         return False
 

@@ -13,6 +13,7 @@ import Queue
 import time
 from book import Order
 import re
+import os
 
 class AddOrderMessage:
     def __init__(self, gameId, qty, side, price):
@@ -97,7 +98,7 @@ class Listener:
         pass
 
 class Gateway:
-    HOST = "localhost"
+    HOST = os.getenv("CHESS_GATEWAY", "localhost")
     PORT = 9999
     def __init__(self, name=None, sock=None, thread=False, listeners=None):
         self.clientMode = (sock is None)
@@ -150,6 +151,10 @@ class Gateway:
         while not self.inboundQueue.empty():
             messages.append(self.inboundQueue.get())
         return messages
+
+    ## server side
+    def send(self, m):
+        self.outboundQueue.put(str(m))
 
     ## internals
     def handleInboundMessages(self):
