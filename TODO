@@ -1,0 +1,68 @@
+finish reorganize public vs private
+gateway:
+  need to have matching engine send both sides of trade to respective gateways, only passive on feed
+  pos (need to deliver settlement to gw (ideally just as special trade))
+  pnl (need marks, probably best to use Book)
+  live, pending orders (need to deliver acks and rejects to gateway)
+  gateway/me enforced risk: max pos, max order size, max orders, valid price, max order rate
+simple strategies
+training
+
+matching engine recovery
+chess game variety in me
+split seq nums for game vs. market data?
+fetchdata?
+message parsers ignore bad formats (only for client-generated messages)
+handle gateway disconnects gracefully (pull orders, leave pos so can quickly bounce if their code is good, will expire at EOG)
+click trader?
+ioc orders?
+cleanup
+pnl:
+  drive all pnl traffic off gateway events, not special
+  pnl this game
+  open pnl
+switch to level book?
+final message format standardization and cleanup
+
+
+
+game:
+  if black has advantage, price can collapse very close to zero (white does not win even if draw), while white with advantage will hover below 100 (probably okay)
+  test sessions, then real sessions (but can still modify, bounce?)
+  will need a quick talk on rules of chess, value of material (should we warn them in advance to read up?), basic structure of markets (diagrams)
+  everybody in JCS needs to play to create an ecosystem (may phase in over course of games)
+
+
+
+
+####################
+## reorganization ##
+####################
+
+chesschallenge
+chesschallenge.private
+
+import chesschallenge.order
+
+public:
+  Gateway
+  Order
+
+  Feed
+  <message types>
+
+  Book (+PriceLevel)
+
+  ChessBoard
+  Stockfish
+
+  Strategy (...)
+
+  Messenger
+
+private:
+  Pnl* (slight refactor to allow use by gateway so each strategy can gets its own pnl without code duplication?)
+  ME (+RecoveryBuilder +MatchingEngineBook unless can merge with public Book cleanly)
+  FeedPublisher (prev. Feed)
+  ExchangeGateway (unless can overlap 100% with Gateway)
+  GatewayCollection
