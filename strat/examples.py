@@ -73,10 +73,10 @@ class SimpleInventoryMarketMaker(strat.Strategy):
         self.maxPos = 10
         self.addQty = 1
 
-    def onBookUpdateMessage(self, bookUpdateMessage):
-        print bookUpdateMessage
+    def onExchangeMessage(self, exchangeMessage):
+        print exchangeMessage
         ## apply to book (note you could check oid, see if it's yours, and not apply if you don't want to see own orders)
-        self.book.processMessage(bookUpdateMessage)
+        self.book.processMessage(exchangeMessage)
 
         bid = self.book.bid()
         ask = self.book.ask()

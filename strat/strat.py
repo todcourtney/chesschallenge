@@ -2,7 +2,7 @@ import gateway, feed
 
 class Strategy(gateway.Listener, feed.Listener):
     def __init__(self, name):
-        self.gateway = Gateway(name=name, listeners=[self])
+        self.gateway = Gateway(name=name, thread=True, listeners=[self])
         self.feed    = Feed(send=False, receive=True, thread=True, listeners=[self])
         self.book    = Book()
         self.board   = ChessBoard()
@@ -16,12 +16,12 @@ class Strategy(gateway.Listener, feed.Listener):
         and pass to the appropriate callback.
         """
         if isinstance(message, ExchangeMessage):
-            self.onBookUpdateMessage(message)
+            self.onExchangeMessage(message)
         elif isinstance(message, ChessMessage):
-            self.onChessUpdateMessage(message)
+            self.onChessMessage(message)
 
-    def onChessUpdateMessage(self, chessUpdateMessage):
+    def onChessMessage(self, chessMessage):
         pass
 
-    def onBookUpdateMessage(self, bookUpdateMessage):
+    def onExchangeMessage(self, exchangeMessage):
         pass
