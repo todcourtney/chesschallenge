@@ -9,8 +9,14 @@ from book import Order
 name = sys.argv[1]
 test = sys.argv[2] if len(sys.argv) > 2 else "manual"
 
+class TestGatewayListener(gateway.Listener):
+    def onGatewayMessage(self, message):
+        print "TestGatewayListener.onGatewayMessage('%s')" % message
+
+L = TestGatewayListener()
+
 print "Starting gateway named", name
-g = gateway.Gateway(name=name)
+g = gateway.Gateway(name=name, thread=True, listeners=[L])
 
 while True:
     if test == "manual":
@@ -29,7 +35,7 @@ while True:
         for gameId in xrange(150,160):
             g.addOrder(gameId, qty, side, prc)
 
-    for m in g.getMessages():
-        print "inbound:", m
+    ##for m in g.getMessages():
+    ##    print "inbound:", m
 
 print "EXIT"

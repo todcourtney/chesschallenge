@@ -197,7 +197,7 @@ class Gateway:
     def runClient(self):
         while True:
             m = self.inboundQueue.get()
-            for L in listeners:
+            for L in self.listeners:
                 L.onGatewayMessage(m)
 
 class GatewayCollection:
