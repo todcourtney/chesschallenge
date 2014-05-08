@@ -46,8 +46,15 @@ class Messenger:
             totalSent += sent
         return True
 
+    def close(self):
+        try:
+            self.socket.shutdown(socket.SHUT_RDWR)
+            self.socket.close()
+        except socket.error:
+            pass
+
 class Listener:
-    def onGatewayMessage(self, message):
+    def onGatewayMessage(self, gateway, message):
         pass
 
 class Gateway:
@@ -60,9 +67,11 @@ class Gateway:
             assert self.name is not None
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.connect((Gateway.HOST, Gateway.PORT))
+            self.pos = 0
         else:
             self.socket = sock
             assert not thread
+            self.pos = None ## so that there will be errors if we try
 
         self.listeners = listeners if listeners is not None else []
         for L in self.listeners:
@@ -99,12 +108,6 @@ class Gateway:
     def cancelOrder(self, oid):
         self.outboundQueue.put(GatewayCancelOrderMessage(oid))
 
-    def getMessages(self):
-        messages = []
-        while not self.inboundQueue.empty():
-            messages.append(self.inboundQueue.get())
-        return messages
-
     ## server side
     def send(self, m):
         self.outboundQueue.put(str(m))
@@ -132,6 +135,7 @@ class Gateway:
         while True:
             m = self.outboundQueue.get()
             print "%s.handleOutboundMessages() sending message '%s'" % (self.name, m)
+            if self.messenger is None: break
             success = self.messenger.sendMessage(str(m))
             if not success:
                 self.close()
@@ -139,16 +143,26 @@ class Gateway:
 
     def close(self):
         print self, " close" ## TODO
+        self.messenger.close()
+        del self.messenger
+        self.messenger = None
         ## shut down receiver
         ## send all pending notifications
         ## shut down remaining sockets
         pass
-        
+
     def runClient(self):
         while True:
             m = self.inboundQueue.get()
+
+            ## keep track of position
+            if isinstance(m, GatewayTradeMessage):
+                self.pos += m.qty * int(m.side)
+            elif isinstance(m, GatewaySettleMessage):
+                self.pos = 0
+
             for L in self.listeners:
-                L.onGatewayMessage(m)
+                L.onGatewayMessage(self, m)
 
 class GatewayCollection:
     def __init__(self):
@@ -171,6 +185,12 @@ class GatewayCollection:
             print clientsocket, address
             ##clientsocket.setblocking(0)
             with self.lock:
+                ## first, prune dead gateways
+                for s in self.gateways.keys():
+                    g = self.gateways[s]
+                    if g.messenger is None:
+                        print "deleting disconnected gateway '%s'" % g.name
+                        del self.gateways[s]
                 self.gateways[clientsocket] = Gateway(sock=clientsocket)
             time.sleep(1)
 
@@ -184,7 +204,8 @@ class GatewayCollection:
 
     def sendToOwner(self, m):
         owner = m.owner
-        gatewaysThisOwner = [g for g in self.gateways.values() if g.name == owner]
-        assert len(gatewaysThisOwner) == 1
-        gatewaysThisOwner[0].send(m)
+        with self.lock:
+            for g in self.gateways.values():
+                if g.name == owner and g.messenger is not None:
+                    g.send(m)
 

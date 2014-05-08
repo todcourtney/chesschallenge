@@ -1,10 +1,8 @@
 finish reorganize public vs private
 gateway:
-  need to have matching engine send both sides of trade to respective gateways, only passive on feed
-  pos (need to deliver settlement to gw (ideally just as special trade))
-  pnl (need marks, probably best to use Book)
   live, pending orders (need to deliver acks and rejects to gateway)
   gateway/me enforced risk: max pos, max order size, max orders, valid price, max order rate
+  pnl (need marks, probably best to use Book)
 simple strategies
 training
 
