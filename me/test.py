@@ -13,6 +13,8 @@ class TestGatewayListener(gateway.Listener):
     def onGatewayMessage(self, g, message):
         print "TestGatewayListener.onGatewayMessage('%s') => pos = %d" % (message, g.pos)
         print g.liveOrders
+        print "pendingOrders  =", [oid for oid in g.pendingOrders ]
+        print "pendingCancels =", [oid for oid in g.pendingCancels]
 
 L = TestGatewayListener()
 
@@ -28,7 +30,7 @@ while True:
         if m == "": break
         g.outboundQueue.put(m)
     elif test == "random":
-        time.sleep(0.5)
+        time.sleep(1)
         prc  = random.randint(45,55)
         side = random.choice((Order.BUY, Order.SELL))
         qty  = random.randint(1,10)

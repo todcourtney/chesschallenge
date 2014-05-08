@@ -80,18 +80,18 @@ class MatchingBook:
                 ## know we don't have a self-match at this point
                 tm = time.time()
                 if ro.qty <= o.qty:
-                    feedEvents   .append(ExchangeTradeMessage(          ro.gameId, ro.oid, ro.qty, ro.side, ro.price))
-                    gatewayEvents.append( GatewayTradeMessage(ro.owner, ro.gameId, ro.oid, ro.qty, ro.side, ro.price))
-                    gatewayEvents.append( GatewayTradeMessage( o.owner,  o.gameId,  o.oid, ro.qty,  o.side, ro.price))
+                    feedEvents   .append(ExchangeTradeMessage(          ro.gameId,          ro.oid, ro.qty, ro.side, ro.price))
+                    gatewayEvents.append( GatewayTradeMessage(ro.owner, ro.gameId, ro.goid, ro.oid, ro.qty, ro.side, ro.price))
+                    gatewayEvents.append( GatewayTradeMessage( o.owner,  o.gameId,  o.goid,  o.oid, ro.qty,  o.side, ro.price))
                     pnlTrades.append(("T", ro.gameId, tm, ro.owner, ro.oid, ro.qty, ro.side, ro.price))
                     pnlTrades.append(("T",  o.gameId, tm,  o.owner,  o.oid, ro.qty,  o.side, ro.price))
                     o.qty  -= ro.qty
                     ro.qty  = 0
                     del l.orders[0]
                 else:
-                    feedEvents   .append(ExchangeTradeMessage(          ro.gameId, ro.oid,  o.qty, ro.side, ro.price))
-                    gatewayEvents.append( GatewayTradeMessage(ro.owner, ro.gameId, ro.oid,  o.qty, ro.side, ro.price))
-                    gatewayEvents.append( GatewayTradeMessage( o.owner,  o.gameId,  o.oid,  o.qty,  o.side, ro.price))
+                    feedEvents   .append(ExchangeTradeMessage(          ro.gameId,          ro.oid,  o.qty, ro.side, ro.price))
+                    gatewayEvents.append( GatewayTradeMessage(ro.owner, ro.gameId, ro.goid, ro.oid,  o.qty, ro.side, ro.price))
+                    gatewayEvents.append( GatewayTradeMessage( o.owner,  o.gameId,  o.goid,  o.oid,  o.qty,  o.side, ro.price))
                     pnlTrades.append(("T", ro.gameId, tm, ro.owner, ro.oid,  o.qty, ro.side, ro.price))
                     pnlTrades.append(("T",  o.gameId, tm,  o.owner,  o.oid,  o.qty,  o.side, ro.price))
                     ro.qty -= o.qty
@@ -103,8 +103,8 @@ class MatchingBook:
         if o.qty > 0:
             L = (self.bids if o.side == Order.BUY else self.asks)[o.price]
             L.orders.append(o)
-            feedEvents   .append(ExchangeAddOrderMessage(         o.gameId, o.oid, o.qty, o.side, o.price))
-            gatewayEvents.append( GatewayAddOrderMessage(o.owner, o.gameId, o.oid, o.qty, o.side, o.price))
+            feedEvents   .append(ExchangeAddOrderMessage(         o.gameId,         o.oid, o.qty, o.side, o.price))
+            gatewayEvents.append( GatewayAddOrderMessage(o.owner, o.gameId, o.goid, o.oid, o.qty, o.side, o.price))
 
             ## track for easy cancels later
             self.oidToPriceLevel[o.oid] = L
@@ -119,8 +119,8 @@ class MatchingBook:
             for ro in restingOrders:
                 if ro.oid == oid:
                     if owner is None or ro.owner == owner:
-                        feedEvents   .append(ExchangeCancelOrderMessage(          ro.gameId, ro.oid, ro.qty, ro.side, ro.price))
-                        gatewayEvents.append( GatewayRemoveOrderMessage(ro.owner, ro.gameId, ro.oid, ro.qty, ro.side, ro.price))
+                        feedEvents   .append(ExchangeCancelOrderMessage(          ro.gameId,          ro.oid, ro.qty, ro.side, ro.price))
+                        gatewayEvents.append( GatewayDeleteOrderMessage(ro.owner, ro.gameId, ro.goid, ro.oid, ro.qty, ro.side, ro.price))
                         restingOrders.remove(ro)
                         del self.oidToPriceLevel[oid]
                         break
@@ -237,8 +237,8 @@ class Book:
                 gm = GatewayAddOrderMessage.fromstr(m)
                 o = Order(gm.oid, gm.qty, gm.side, gm.price)
                 self.addOrder(o)
-            elif code == GatewayRemoveOrderMessage.code:
-                gm = GatewayRemoveOrderMessage.fromstr(m)
+            elif code == GatewayDeleteOrderMessage.code:
+                gm = GatewayDeleteOrderMessage.fromstr(m)
                 self.removeOrder(gm.oid)
             elif code == GatewayTradeMessage.code:
                 gm = ExchangeTradeMessage.fromstr(subm)

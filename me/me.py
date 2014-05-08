@@ -113,12 +113,13 @@ if __name__ == "__main__":
             continue
         elif m.gameId != game.gameId:
             print "WARNING: MatchingEngine dropping message not for this game (%s) from %s: '%s'" % (game.gameId, g.name, m)
+            g.send(GatewayRejectMessage(g.name, m.gameId, m.goid, reason="BAD_GAME_ID"))
             continue
         print "MatchingEngine got message from %s: '%s'" % (g.name, m)
         events = []
         gatewayEvents = []
         if isinstance(m, GatewaySubmitOrderMessage):
-            o = Order(newoid,m.qty,m.side,m.price,owner=g.name,gameId=m.gameId)
+            o = Order(newoid,m.qty,m.side,m.price,owner=g.name,gameId=m.gameId,goid=m.goid)
             newoid += 1
             newEvents, newGatewayEvents, newPnlEvents = b.addOrder(o)
             events       .extend(newEvents)

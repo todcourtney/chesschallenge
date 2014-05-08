@@ -4,7 +4,7 @@ class Order:
     BUY  =  1
     SELL = -1
 
-    def __init__(self, oid, qty, side, price, owner=None, gameId=None):
+    def __init__(self, oid, qty, side, price, owner=None, gameId=None, goid=None):
         assert side in (Order.BUY, Order.SELL)
         self.oid    = oid
         self.qty    = qty
@@ -12,6 +12,7 @@ class Order:
         self.price  = price
         self.owner  = owner
         self.gameId = gameId
+        self.goid   = goid
 
     def __str__(self):
         return str(self.qty)

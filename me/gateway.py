@@ -66,6 +66,11 @@ class Gateway:
         self.name = name
         self.liveOrders = None
         self.pos        = None
+
+        self.pendingLock    = threading.Lock()
+        self.pendingOrders  = dict()
+        self.pendingCancels = set()
+
         if self.clientMode:
             assert self.name is not None
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -73,6 +78,7 @@ class Gateway:
             self.liveOrders = book.Book()
             self.liveOrders.needRecovery = False
             self.pos = 0
+            self.goid = 99000
         else:
             self.socket = sock
             assert not thread
@@ -107,9 +113,15 @@ class Gateway:
 
     ## client side
     def addOrder(self, gameId, qty, side, price):
-        self.outboundQueue.put(GatewaySubmitOrderMessage(gameId, qty, side, price))
+        self.goid += 1
+        m = GatewaySubmitOrderMessage(gameId, self.goid, qty, side, price)
+        with self.pendingLock:
+            self.pendingOrders[self.goid] = m
+        self.outboundQueue.put(m)
 
     def cancelOrder(self, oid):
+        with self.pendingLock:
+            self.pendingCancels.add(oid)
         self.outboundQueue.put(GatewayCancelOrderMessage(oid))
 
     ## server side
@@ -165,9 +177,28 @@ class Gateway:
             elif isinstance(m, GatewaySettleMessage):
                 self.pos = 0
 
-            ## keep track of live orders
-            self.liveOrders.processMessage(m)
+            ## keep track of pending, live, and pending cancel
+            with self.pendingLock:
+                if isinstance(m, GatewayAddOrderMessage) or isinstance(m, GatewayRejectMessage):
+                    if m.goid in self.pendingOrders:
+                        del self.pendingOrders[m.goid]
+                elif isinstance(m, GatewayDeleteOrderMessage):
+                    self.pendingCancels.discard(m.goid)
+                elif isinstance(m, GatewaySettleMessage):
+                    self.pendingOrders.clear()
+                    self.pendingCancels.clear()
 
+                ## keep track of live orders
+                self.liveOrders.processMessage(m)
+
+                ## trade can also remove pending cancels
+                if isinstance(m, GatewayTradeMessage):
+                    if m.oid in self.liveOrders.oidToPriceLevel:
+                        L = self.liveOrders.oidToPriceLevel[m.oid]
+                        if all(o.oid != m.oid for o in L):
+                            self.pendingCancels.discard(m.goid)
+
+            ## now that internal state is correct, notify listeners
             for L in self.listeners:
                 L.onGatewayMessage(self, m)
 
