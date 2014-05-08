@@ -64,11 +64,13 @@
 ##        if not alreadyHaveBuy : self.sendOrder(desiredQty, Order.BUY , buyPrice)
 ##        if not alreadyHaveSell: self.sendOrder(desiredQty, Order.SELL, sellPrice)
 
-
+import strat
+import time
 
 class SimpleInventoryMarketMaker(strat.Strategy):
     def __init__(self, name):
-        super(strat.Strategy, self).__init__()
+        print "SimpleInventoryMarketMaker.__init__"
+        super(SimpleInventoryMarketMaker, self).__init__(name)
 
         self.maxPos = 10
         self.addQty = 1
@@ -126,10 +128,11 @@ class SimpleInventoryMarketMaker(strat.Strategy):
 class MeTooMarketMaker(strat.Strategy):
     def onBookUpdateMessage(self, bookUpdateMessage):
         ## parse out whether it's a buy or sell, and the price, and just do it too if it's not already me
+        pass
 
 if __name__ == "__main__":
     import sys
-    x = SimpleInventoryMarketMaker()
+    x = SimpleInventoryMarketMaker("SIMM")
     while True:
         time.sleep(1)
         pass
