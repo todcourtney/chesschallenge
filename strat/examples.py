@@ -93,7 +93,8 @@ class SimpleInventoryMarketMaker(strat.Strategy):
         ## check existing orders that haven't been canceled
         restingBuyQty, restingSellQty = 0,0
         levelsAlreadyPresent = set()
-        for o in self.gateway.orders(pending=True, live=True, canceling=False):
+        ordersPending, ordersLive, ordersCanceling = self.gateway.orders()
+        for o in ordersLive:
             levelsAlreadyPresent.add((o.side, o.price))
 
             ## orders that we think are too aggressive

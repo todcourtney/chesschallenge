@@ -202,6 +202,13 @@ class Gateway:
             for L in self.listeners:
                 L.onGatewayMessage(self, m)
 
+    def orders(self):
+        ordersPending   = orders.extend(Order(0, m.qty, m.side, m.price) for m in self.pendingOrders)
+        ordersLive      = orders.extend(o for L in self.liveOrders.bids + self.liveOrders.asks for o in L)
+        ordersCanceling = orders.extend(o for L in self.liveOrders.bids + self.liveOrders.asks for o in L if o.goid in self.pendingCancels)
+        return ordersPending, ordersLive, ordersCanceling
+
+
 class GatewayCollection:
     def __init__(self):
         self.lock = threading.Lock()
