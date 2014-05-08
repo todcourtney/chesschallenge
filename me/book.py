@@ -1,52 +1,7 @@
 import time
 import sys
-
-class Order:
-    BUY  =  1
-    SELL = -1
-
-    def __init__(self, oid, qty, side, price, owner=None, gameId=None):
-        assert side in (Order.BUY, Order.SELL)
-        self.oid    = oid
-        self.qty    = qty
-        self.side   = side
-        self.price  = price
-        self.owner  = owner
-        self.gameId = gameId
-
-    def __str__(self):
-        return str(self.qty)
-
-class ExchangeMessage:
-    def __init__(self, gameId, oid, qty, side, price):
-        assert hasattr(self,'code'), "you cannot instantiate ExchangeMessage directly"
-        self.gameId = gameId
-        self.oid    = oid
-        self.qty    = qty
-        self.side   = side
-        self.price  = price
-
-    @classmethod
-    def fromstr(cls, s):
-        code, gameId, oid, qty, side, price = s.split(",")
-        assert code == cls.code
-        oid    = int(oid)
-        qty    = int(qty)
-        side   = {"B":Order.BUY,"S":Order.SELL}[side]
-        price  = int(price)
-        return cls(gameId, oid, qty, side, price)
-
-    def __str__(self):
-        return "%s,%s,%d,%d,%s,%d" % (self.code, self.gameId, self.oid, self.qty, {Order.BUY:"B",Order.SELL:"S"}[self.side], self.price)
-
-class ExchangeAddOrderMessage(ExchangeMessage):
-    code = "XA"
-
-class ExchangeCancelOrderMessage(ExchangeMessage):
-    code = "XC"
-
-class ExchangeTradeMessage(ExchangeMessage):
-    code = "XT"
+from order import Order
+from messages import *
 
 class PriceLevel:
     def __init__(self, side, price):
@@ -100,8 +55,9 @@ class MatchingBook:
         return a.price
 
     def addOrder(self, o):
-        events = []
-        pnlTrades = []
+        feedEvents    = []
+        gatewayEvents = []
+        pnlTrades     = []
 
         ## (1) make all trades for resting orders that this new order crosses
         l = None
@@ -116,20 +72,26 @@ class MatchingBook:
 
                 ## prevent self-match by canceling resting, move to next order
                 if ro.owner == o.owner:
-                    events += self.cancelOrder(ro.oid, owner=o.owner)
+                    newFeedEvents, newGatewayEvents = self.cancelOrder(ro.oid, owner=o.owner)
+                    feedEvents.extend(newFeedEvents)
+                    gatewayEvents.extend(newGatewayEvents)
                     continue
 
                 ## know we don't have a self-match at this point
                 tm = time.time()
                 if ro.qty <= o.qty:
-                    events.append(ExchangeTradeMessage(ro.gameId, ro.oid, ro.qty, ro.side, ro.price))
+                    feedEvents   .append(ExchangeTradeMessage(          ro.gameId, ro.oid, ro.qty, ro.side, ro.price))
+                    gatewayEvents.append( GatewayTradeMessage(ro.owner, ro.gameId, ro.oid, ro.qty, ro.side, ro.price))
+                    gatewayEvents.append( GatewayTradeMessage( o.owner,  o.gameId,  o.oid, ro.qty,  o.side, ro.price))
                     pnlTrades.append(("T", ro.gameId, tm, ro.owner, ro.oid, ro.qty, ro.side, ro.price))
                     pnlTrades.append(("T",  o.gameId, tm,  o.owner,  o.oid, ro.qty,  o.side, ro.price))
                     o.qty  -= ro.qty
                     ro.qty  = 0
                     del l.orders[0]
                 else:
-                    events.append(ExchangeTradeMessage(ro.gameId, ro.oid,  o.qty, ro.side, ro.price))
+                    feedEvents   .append(ExchangeTradeMessage(          ro.gameId, ro.oid,  o.qty, ro.side, ro.price))
+                    gatewayEvents.append( GatewayTradeMessage(ro.owner, ro.gameId, ro.oid,  o.qty, ro.side, ro.price))
+                    gatewayEvents.append( GatewayTradeMessage( o.owner,  o.gameId,  o.oid,  o.qty,  o.side, ro.price))
                     pnlTrades.append(("T", ro.gameId, tm, ro.owner, ro.oid,  o.qty, ro.side, ro.price))
                     pnlTrades.append(("T",  o.gameId, tm,  o.owner,  o.oid,  o.qty,  o.side, ro.price))
                     ro.qty -= o.qty
@@ -141,28 +103,31 @@ class MatchingBook:
         if o.qty > 0:
             L = (self.bids if o.side == Order.BUY else self.asks)[o.price]
             L.orders.append(o)
-            events.append(ExchangeAddOrderMessage(o.gameId, o.oid, o.qty, o.side, o.price))
+            feedEvents   .append(ExchangeAddOrderMessage(         o.gameId, o.oid, o.qty, o.side, o.price))
+            gatewayEvents.append( GatewayAddOrderMessage(o.owner, o.gameId, o.oid, o.qty, o.side, o.price))
 
             ## track for easy cancels later
             self.oidToPriceLevel[o.oid] = L
 
-        return events, pnlTrades
+        return feedEvents, gatewayEvents, pnlTrades
 
     def cancelOrder(self, oid, owner=None):
-        events = []
+        feedEvents    = []
+        gatewayEvents = []
         if oid in self.oidToPriceLevel:
             restingOrders = self.oidToPriceLevel[oid].orders
             for ro in restingOrders:
                 if ro.oid == oid:
                     if owner is None or ro.owner == owner:
-                        events.append(ExchangeCancelOrderMessage(ro.gameId, ro.oid, ro.qty, ro.side, ro.price))
+                        feedEvents   .append(ExchangeCancelOrderMessage(          ro.gameId, ro.oid, ro.qty, ro.side, ro.price))
+                        gatewayEvents.append( GatewayRemoveOrderMessage(ro.owner, ro.gameId, ro.oid, ro.qty, ro.side, ro.price))
                         restingOrders.remove(ro)
                         del self.oidToPriceLevel[oid]
                         break
                     else:
                         pass ## should send cancel reject for trying to cancel other owner's order
         ## TODO: cancel rejects if order is not found (for now silently ignore)
-        return events
+        return feedEvents, gatewayEvents
 
     def getStateForRecoveryMessage(self):
         events = []

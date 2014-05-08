@@ -3,16 +3,17 @@ import time
 import threading
 import Queue
 
-from book import Order, MatchingBook, Book
+from order import Order
+from messages import *
+from book import MatchingBook, Book
 import gateway
-from gateway import AddOrderMessage, CancelOrderMessage
 import feed
 import pnl
 import chessgame
 
 game = chessgame.ChessGame(gameId = 150, result = "1/2-1/2", moves="e4 c5 Nf3 e6 d4 cxd4 Nxd4 a6 Bd3 Nf6 O-O Qc7 Qe2 d6 c4 g6 Nc3 Bg7 Nf3 O-O Bf4 Nc6 Rac1 e5 Bg5 h6 Be3 Bg4 Nd5 Qd8 h3 Nxd5 cxd5 Nd4 Bxd4 Bxf3 Qxf3 exd4 Rc4 Rc8 Rfc1 Rxc4 Rxc4 h5 Qd1 Be5 Qc1 Qf6 Rc7 Rb8 a4 Kg7 b4 h4 Kf1 Bf4 Qd1 Qd8 Rc4 Rc8 a5 Rxc4 Bxc4 Qf6 Be2 Be5 Bf3 Qd8 Qc2 b6 axb6 Qxb6 Qc4 d3".split(" "))
 n = 0
-speed = 1
+speed = 0.2
 nextMove = time.time() + speed
 
 class RecoveryBuilder:
@@ -73,9 +74,13 @@ if __name__ == "__main__":
                 f.send(moveMessage)
                 n += 1
             else:
-                pnlEvents.append(("S", game.gameId, time.time(), "", "", "", "", 100 if game.whiteWins() else 0))
-                ##print pnlEvents
                 resultMsg = game.resultMessage()
+                settlePrice = 100 if resultMsg.whiteWins() else 0
+                pnlEvents.append(("S", game.gameId, time.time(), "", "", "", "", settlePrice))
+                for g in gateways.gateways.values():
+                    g.send(GatewaySettleMessage(game.gameId, settlePrice))
+
+                ##print pnlEvents
                 f.send(resultMsg)
                 if debugFeedBook: fb.processMessage(resultMsg)
                 print "Waiting 5 sec to start next game..."
@@ -111,15 +116,19 @@ if __name__ == "__main__":
             continue
         print "MatchingEngine got message from %s: '%s'" % (g.name, m)
         events = []
-        if isinstance(m, AddOrderMessage):
+        gatewayEvents = []
+        if isinstance(m, GatewaySubmitOrderMessage):
             o = Order(newoid,m.qty,m.side,m.price,owner=g.name,gameId=m.gameId)
             newoid += 1
-            newEvents, newPnlEvents = b.addOrder(o)
-            events   .extend(newEvents)
-            pnlEvents.extend(newPnlEvents)
-        elif isinstance(m, CancelOrderMessage):
+            newEvents, newGatewayEvents, newPnlEvents = b.addOrder(o)
+            events       .extend(newEvents)
+            gatewayEvents.extend(newGatewayEvents)
+            pnlEvents    .extend(newPnlEvents)
+        elif isinstance(m, GatewayCancelOrderMessage):
             oid = m.oid
-            events += b.cancelOrder(oid,owner=g.name)
+            newEvents, newGatewayEvents = b.cancelOrder(oid,owner=g.name)
+            events       .extend(newEvents)
+            gatewayEvents.extend(newGatewayEvents)
 
         ## now that messages have been processed, record new mark price
         bid = b.bid()
@@ -133,13 +142,9 @@ if __name__ == "__main__":
             pnlEvents.append(("M", game.gameId, time.time(), "", "", "", "", mark))
             oldMark = mark
 
-        ##print b
-        ##print events
-        ##print pnlEvents
-
-        ## response for gateway
-        for e in events:
-            g.send(e)
+        ## responses for gateways
+        for e in gatewayEvents:
+            gateways.sendToOwner(e)
 
         ## feed handler
         msg = ";".join(str(e) for e in events)

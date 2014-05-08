@@ -11,72 +11,9 @@ import threading
 import socket
 import Queue
 import time
-from book import Order
-import re
+from order import Order
+from messages import *
 import os
-
-class GatewayMessage:
-    def __init__(self):
-        raise NotImplementedError("cannot instantiate GatewayMessage base class")
-
-    @classmethod
-    def fromstr(cls, s):
-        code, rest = s.split(",", 1)
-        if   code ==    AddOrderMessage.code: return    AddOrderMessage.fromstr(s)
-        elif code == CancelOrderMessage.code: return CancelOrderMessage.fromstr(s)
-        elif code ==       LoginMessage.code: return       LoginMessage.fromstr(s)
-        else:
-            raise ValueError("no message type has code '%s'" % s)
-
-class AddOrderMessage(GatewayMessage):
-    code = "GA"
-    def __init__(self, gameId, qty, side, price):
-        self.gameId = gameId
-        self.qty    = qty
-        self.side   = side
-        self.price  = price
-
-    @classmethod
-    def fromstr(cls, s):
-        add, gameId, qty, side, price = s.split(",")
-        assert add == cls.code
-        qty    = int(qty)
-        side   = {"B":Order.BUY,"S":Order.SELL}[side]
-        price  = int(price)
-        return cls(gameId, qty, side, price)
-
-    def __str__(self):
-        return "%s,%s,%d,%s,%d" % (AddOrderMessage.code, self.gameId, self.qty, {Order.BUY:"B",Order.SELL:"S"}[self.side], self.price)
-
-class CancelOrderMessage(GatewayMessage):
-    code = "GC"
-    def __init__(self, oid):
-        self.oid = oid
-
-    @classmethod
-    def fromstr(cls, s):
-        cancel, oid = s.split(",")
-        assert cancel == cls.code
-        oid = int(oid)
-        return cls(oid)
-
-    def __str__(self):
-        return "%s,%d" % (CancelOrderMessage.code, self.oid)
-
-class LoginMessage(GatewayMessage):
-    code = "GN"
-    def __init__(self, name):
-        assert re.match("^[0-9A-Za-z]{3,8}$", name), "names must consist of between 3 and 8 characters from [0-9A-Za-z], not '%s'" % name
-        self.name = name
-
-    @classmethod
-    def fromstr(cls, s):
-        login, name = s.split(",")
-        assert login == cls.code
-        return cls(name)
-
-    def __str__(self):
-        return "%s,%s" % (LoginMessage.code, self.name)
 
 class Messenger:
     SIZE = 32
@@ -157,10 +94,10 @@ class Gateway:
 
     ## client side
     def addOrder(self, gameId, qty, side, price):
-        self.outboundQueue.put(AddOrderMessage(gameId, qty, side, price))
+        self.outboundQueue.put(GatewaySubmitOrderMessage(gameId, qty, side, price))
 
     def cancelOrder(self, oid):
-        self.outboundQueue.put(CancelOrderMessage(oid))
+        self.outboundQueue.put(GatewayCancelOrderMessage(oid))
 
     def getMessages(self):
         messages = []
@@ -244,3 +181,10 @@ class GatewayCollection:
                 if not g.inboundQueue.empty():
                     return g.inboundQueue.get(), g
         return None, None
+
+    def sendToOwner(self, m):
+        owner = m.owner
+        gatewaysThisOwner = [g for g in self.gateways.values() if g.name == owner]
+        assert len(gatewaysThisOwner) == 1
+        gatewaysThisOwner[0].send(m)
+
