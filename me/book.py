@@ -192,6 +192,7 @@ class Book:
 
         ## allow str or message for now by normalizing to string
         m = str(m)
+        print m
 
         ## when a game starts, we don't need recovery, but we have to clear old orders
         if m.startswith("CR"):
@@ -228,6 +229,24 @@ class Book:
                 elif code == ExchangeTradeMessage.code:
                     xm = ExchangeTradeMessage.fromstr(subm)
                     self.applyTrade(xm.oid, xm.qty)
+            return True
+        elif m.startswith("G"):
+            code, rest = m.split(",", 1)
+            print "  code =", code
+            if code == GatewayAddOrderMessage.code:
+                gm = GatewayAddOrderMessage.fromstr(m)
+                o = Order(gm.oid, gm.qty, gm.side, gm.price)
+                self.addOrder(o)
+            elif code == GatewayRemoveOrderMessage.code:
+                gm = GatewayRemoveOrderMessage.fromstr(m)
+                self.removeOrder(gm.oid)
+            elif code == GatewayTradeMessage.code:
+                gm = ExchangeTradeMessage.fromstr(subm)
+                self.applyTrade(gm.oid, gm.qty)
+            elif code == GatewaySettleMessage.code:
+                self.clear()
+            else:
+                return False
             return True
         return False
 

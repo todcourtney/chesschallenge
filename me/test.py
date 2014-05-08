@@ -12,6 +12,7 @@ test = sys.argv[2] if len(sys.argv) > 2 else "manual"
 class TestGatewayListener(gateway.Listener):
     def onGatewayMessage(self, g, message):
         print "TestGatewayListener.onGatewayMessage('%s') => pos = %d" % (message, g.pos)
+        print g.liveOrders
 
 L = TestGatewayListener()
 

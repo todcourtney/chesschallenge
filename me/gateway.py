@@ -13,6 +13,7 @@ import Queue
 import time
 from order import Order
 from messages import *
+import book
 import os
 
 class Messenger:
@@ -63,15 +64,18 @@ class Gateway:
     def __init__(self, name=None, sock=None, thread=False, listeners=None):
         self.clientMode = (sock is None)
         self.name = name
+        self.liveOrders = None
+        self.pos        = None
         if self.clientMode:
             assert self.name is not None
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.connect((Gateway.HOST, Gateway.PORT))
+            self.liveOrders = book.Book()
+            self.liveOrders.needRecovery = False
             self.pos = 0
         else:
             self.socket = sock
             assert not thread
-            self.pos = None ## so that there will be errors if we try
 
         self.listeners = listeners if listeners is not None else []
         for L in self.listeners:
@@ -160,6 +164,9 @@ class Gateway:
                 self.pos += m.qty * int(m.side)
             elif isinstance(m, GatewaySettleMessage):
                 self.pos = 0
+
+            ## keep track of live orders
+            self.liveOrders.processMessage(m)
 
             for L in self.listeners:
                 L.onGatewayMessage(self, m)
