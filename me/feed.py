@@ -1,6 +1,7 @@
 import socket
 import struct
 import threading
+from messages import *
 
 class Listener:
     def onFeedMessage(rawMessage, seq, drop, message):
@@ -56,6 +57,11 @@ class Feed:
     def run(self):
         while True:
             msg, seq, drop, m = self.recv()
-            for L in self.listeners:
-                L.onFeedMessage(msg, seq, drop, m)
 
+            if   m.startswith("C"): msgs = [   ChessMessage.fromstr(m)                      ]
+            elif m.startswith("X"): msgs = [ExchangeMessage.fromstr(m) for m in m.split(";")]
+            else:                   msgs = [m]
+
+            for m in msgs:
+                for L in self.listeners:
+                    L.onFeedMessage(msg, seq, drop, m)

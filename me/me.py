@@ -113,7 +113,8 @@ if __name__ == "__main__":
             continue
         elif m.gameId != game.gameId:
             print "WARNING: MatchingEngine dropping message not for this game (%s) from %s: '%s'" % (game.gameId, g.name, m)
-            g.send(GatewayRejectMessage(g.name, m.gameId, m.goid, reason="BAD_GAME_ID"))
+            if m.code == GatewayAddOrderMessage.code:
+                g.send(GatewayRejectMessage(g.name, m.gameId, m.goid, reason="BAD_GAME_ID"))
             continue
         print "MatchingEngine got message from %s: '%s'" % (g.name, m)
         events = []

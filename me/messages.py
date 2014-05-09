@@ -3,7 +3,21 @@ from order import Order
 
 class ExchangeMessage:
     def __init__(self, gameId, oid, qty, side, price):
-        assert hasattr(self,'code'), "you cannot instantiate ExchangeMessage directly"
+        raise NotImplementedError("cannot instantiate ExchangeMessage base class")
+
+    @classmethod
+    def fromstr(cls, s):
+        print s
+        code, rest = s.split(",", 1)
+        if   code ==    ExchangeAddOrderMessage.code: return    ExchangeAddOrderMessage.fromstr(s)
+        elif code == ExchangeCancelOrderMessage.code: return ExchangeCancelOrderMessage.fromstr(s)
+        elif code ==       ExchangeTradeMessage.code: return       ExchangeTradeMessage.fromstr(s)
+        else:
+            raise ValueError("no ExchangeMessage type has code '%s'" % s)
+
+class ExchangeBookMessage(ExchangeMessage):
+    def __init__(self, gameId, oid, qty, side, price):
+        assert hasattr(self,'code'), "you cannot instantiate ExchangeBookMessage directly"
         self.gameId = gameId
         self.oid    = oid
         self.qty    = qty
@@ -23,14 +37,81 @@ class ExchangeMessage:
     def __str__(self):
         return "%s,%s,%d,%d,%s,%d" % (self.code, self.gameId, self.oid, self.qty, {Order.BUY:"B",Order.SELL:"S"}[self.side], self.price)
 
-class ExchangeAddOrderMessage(ExchangeMessage):
+class ExchangeAddOrderMessage(ExchangeBookMessage):
     code = "XA"
 
-class ExchangeCancelOrderMessage(ExchangeMessage):
+class ExchangeCancelOrderMessage(ExchangeBookMessage):
     code = "XC"
 
-class ExchangeTradeMessage(ExchangeMessage):
+class ExchangeTradeMessage(ExchangeBookMessage):
     code = "XT"
+
+
+
+
+class ChessMessage:
+    def __init__(self):
+        raise NotImplementedError("cannot instantiate ChessMessage base class")
+
+    @classmethod
+    def fromstr(cls, s):
+        code, rest = s.split(",", 1)
+        if   code == ChessNewGameMessage.code: return ChessNewGameMessage.fromstr(s)
+        elif code ==    ChessMoveMessage.code: return    ChessMoveMessage.fromstr(s)
+        elif code ==  ChessResultMessage.code: return  ChessResultMessage.fromstr(s)
+        else:
+            raise ValueError("no ChessMessage type has code '%s'" % s)
+
+class ChessNewGameMessage(ChessMessage):
+    code = "CN"
+    def __init__(self, gameId):
+        self.gameId  = gameId
+
+    @classmethod
+    def fromstr(cls, s):
+        msgType, gameId = s.split(",")
+        assert msgType == cls.code
+        return cls(gameId)
+
+    def __str__(self):
+        return "%s,%s" % (self.code, self.gameId)
+
+class ChessMoveMessage(ChessMessage):
+    code = "CM"
+    def __init__(self, gameId, move, history):
+        self.gameId  = gameId
+        self.move    = move
+        self.history = history
+
+    @classmethod
+    def fromstr(cls, s):
+        msgType, gameId, move, history = s.split(",")
+        assert msgType == cls.code
+        history = history.split(" ")
+        return cls(gameId, move, history)
+
+    def __str__(self):
+        return "%s,%s,%s,%s" % (self.code, self.gameId, self.move, " ".join(self.history))
+
+
+class ChessResultMessage(ChessMessage):
+    code = "CR"
+    def __init__(self, gameId, result):
+        self.gameId  = gameId
+        self.result  = result
+
+    def whiteWins(self):
+        return self.result == "1-0"
+
+    @classmethod
+    def fromstr(cls, s):
+        msgType, gameId, result = s.split(",")
+        assert msgType == cls.code
+        return cls(gameId, result)
+
+    def __str__(self):
+        return "%s,%s,%s" % (self.code, self.gameId, self.result)
+
 
 
 
@@ -77,18 +158,19 @@ class GatewaySubmitOrderMessage(GatewayMessage):
 
 class GatewayCancelOrderMessage(GatewayMessage):
     code = "GC"
-    def __init__(self, oid):
-        self.oid = oid
+    def __init__(self, gameId, oid):
+        self.gameId = gameId
+        self.oid    = oid
 
     @classmethod
     def fromstr(cls, s):
-        cancel, oid = s.split(",")
+        cancel, gameId, oid = s.split(",")
         assert cancel == cls.code
         oid = int(oid)
-        return cls(oid)
+        return cls(gameId, oid)
 
     def __str__(self):
-        return "%s,%d" % (GatewayCancelOrderMessage.code, self.oid)
+        return "%s,%s,%d" % (GatewayCancelOrderMessage.code, self.gameId, self.oid)
 
 class LoginMessage(GatewayMessage):
     code = "GN"

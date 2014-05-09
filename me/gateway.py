@@ -119,10 +119,11 @@ class Gateway:
             self.pendingOrders[self.goid] = m
         self.outboundQueue.put(m)
 
-    def cancelOrder(self, oid):
+    def cancelOrder(self, gameId, oid):
+        assert gameId is not None
         with self.pendingLock:
             self.pendingCancels.add(oid)
-        self.outboundQueue.put(GatewayCancelOrderMessage(oid))
+        self.outboundQueue.put(GatewayCancelOrderMessage(gameId, oid))
 
     ## server side
     def send(self, m):
@@ -203,9 +204,9 @@ class Gateway:
                 L.onGatewayMessage(self, m)
 
     def orders(self):
-        ordersPending   = orders.extend(Order(0, m.qty, m.side, m.price) for m in self.pendingOrders)
-        ordersLive      = orders.extend(o for L in self.liveOrders.bids + self.liveOrders.asks for o in L)
-        ordersCanceling = orders.extend(o for L in self.liveOrders.bids + self.liveOrders.asks for o in L if o.goid in self.pendingCancels)
+        ordersPending   = [Order(0, m.qty, m.side, m.price, goid=m.goid) for m in self.pendingOrders.values()]
+        ordersLive      = [o for L in self.liveOrders.bids + self.liveOrders.asks for o in L.orders]
+        ordersCanceling = [o for L in self.liveOrders.bids + self.liveOrders.asks for o in L.orders if o.goid in self.pendingCancels]
         return ordersPending, ordersLive, ordersCanceling
 
 
