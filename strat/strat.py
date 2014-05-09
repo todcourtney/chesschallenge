@@ -4,13 +4,14 @@ from messages import *
 
 class Strategy(object, gateway.Listener, feed.Listener):
     def __init__(self, name):
-        print "Strategy.__init__"
         self.gateway = gateway.Gateway(name=name, thread=True, listeners=[self])
         self.feed    = feed.Feed(send=False, receive=True, thread=True, listeners=[self])
         self.book    = book.Book()
         self.board   = ChessBoard.ChessBoard()
+        self.gameId  = None
 
     def onGatewayMessage(self, gateway, message):
+        print "Strategy.onGatewayMessage('%s')" % message
         pass
 
     def onFeedMessage(self, rawMessage, seq, drop, message):
@@ -20,14 +21,16 @@ class Strategy(object, gateway.Listener, feed.Listener):
         """
 
         print rawMessage
-        if isinstance(message, ExchangeMessage):
+        if isinstance(message, ExchangeMessage) or (isinstance(message, str) and message.startswith("B")):
             print "  => ExchangeMessage: ", message
             self.onExchangeMessage(message)
-#        elif isinstance(message, ChessMessage):
-#            self.onChessMessage(message)
+        elif isinstance(message, ChessMessage):
+            self.onChessMessage(message)
 
     def onChessMessage(self, chessMessage):
+        print "Strategy.onChessMessage('%s')" % chessMessage
         pass
 
     def onExchangeMessage(self, exchangeMessage):
+        print "Strategy.onExchangeMessage('%s')" % exchangeMessage
         pass
