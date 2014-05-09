@@ -7,7 +7,6 @@ class ExchangeMessage:
 
     @classmethod
     def fromstr(cls, s):
-        print s
         code, rest = s.split(",", 1)
         if   code ==    ExchangeAddOrderMessage.code: return    ExchangeAddOrderMessage.fromstr(s)
         elif code == ExchangeCancelOrderMessage.code: return ExchangeCancelOrderMessage.fromstr(s)

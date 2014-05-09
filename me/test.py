@@ -5,20 +5,21 @@ import time
 import random
 
 from book import Order
+from log import log
 
 name = sys.argv[1]
 test = sys.argv[2] if len(sys.argv) > 2 else "manual"
 
 class TestGatewayListener(gateway.Listener):
     def onGatewayMessage(self, g, message):
-        print "TestGatewayListener.onGatewayMessage('%s') => pos = %d" % (message, g.pos)
-        print g.liveOrders
-        print "pendingOrders  =", [oid for oid in g.pendingOrders ]
-        print "pendingCancels =", [oid for oid in g.pendingCancels]
+        log.info("TestGatewayListener.onGatewayMessage('%s') => pos = %d" % (message, g.pos))
+        log.info(g.liveOrders)
+        log.info("pendingOrders  = %s" % ([oid for oid in g.pendingOrders ]))
+        log.info("pendingCancels = %s" % ([oid for oid in g.pendingCancels]))
 
 L = TestGatewayListener()
 
-print "Starting gateway named", name
+log.info("Starting gateway named %s", name)
 g = gateway.Gateway(name=name, thread=True, listeners=[L])
 
 while True:

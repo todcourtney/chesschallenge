@@ -5,13 +5,15 @@ import time
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
+from log import log
+
 class PnlEvents:
     def __init__(self, filename):
         self.events = []
 
         ## recover from old file
         if os.path.isfile(filename):
-            print "Reading PnlEvents from file", filename
+            log.info("Reading PnlEvents from file %s" % filename)
             self.f = open(filename, 'r+', 1)
             self.events = [tuple(e) for e in csv.reader(self.f, delimiter=",")]        
             ##print "PnlEvents:", self.events
@@ -37,7 +39,7 @@ class Pnl:
         self.events = []
         self.lock = threading.Lock()
         self.filename = filename
-        self.thread = threading.Thread(target=self.keepEventsUpToDate)
+        self.thread = threading.Thread(target=self.keepEventsUpToDate, name="PNL")
         self.thread.daemon = True
         self.thread.start()
 
@@ -130,8 +132,8 @@ if __name__ == "__main__":
         time.sleep(2)
         z = p.getPnl()
         for k,v in z.iteritems():
-            print k
+            log.info(k)
             for r in v:
-                print "  ", r
+                log.info("  " + r)
 
-        print leaderboardFromSummary(z)
+        log.info(leaderboardFromSummary(z))

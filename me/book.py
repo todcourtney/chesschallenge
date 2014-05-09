@@ -2,6 +2,7 @@ import time
 import sys
 from order import Order
 from messages import *
+from log import log
 
 class PriceLevel:
     def __init__(self, side, price):
@@ -192,7 +193,7 @@ class Book:
 
         ## allow str or message for now by normalizing to string
         m = str(m)
-        print m
+        log.info(m)
 
         ## when a game starts, we don't need recovery, but we have to clear old orders
         if m.startswith("CR"):
@@ -232,7 +233,7 @@ class Book:
             return True
         elif m.startswith("G"):
             code, rest = m.split(",", 1)
-            print "  code =", code
+            log.info("  code = " + code)
             if code == GatewayAddOrderMessage.code:
                 gm = GatewayAddOrderMessage.fromstr(m)
                 o = Order(gm.oid, gm.qty, gm.side, gm.price)

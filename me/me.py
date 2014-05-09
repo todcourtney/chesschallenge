@@ -11,6 +11,8 @@ import feed
 import pnl
 import chessgame
 
+from log import log
+
 game = chessgame.ChessGame(gameId = 150, result = "1/2-1/2", moves="e4 c5 Nf3 e6 d4 cxd4 Nxd4 a6 Bd3 Nf6 O-O Qc7 Qe2 d6 c4 g6 Nc3 Bg7 Nf3 O-O Bf4 Nc6 Rac1 e5 Bg5 h6 Be3 Bg4 Nd5 Qd8 h3 Nxd5 cxd5 Nd4 Bxd4 Bxf3 Qxf3 exd4 Rc4 Rc8 Rfc1 Rxc4 Rxc4 h5 Qd1 Be5 Qc1 Qf6 Rc7 Rb8 a4 Kg7 b4 h4 Kf1 Bf4 Qd1 Qd8 Rc4 Rc8 a5 Rxc4 Bxc4 Qf6 Be2 Be5 Bf3 Qd8 Qc2 b6 axb6 Qxb6 Qc4 d3".split(" "))
 n = 0
 speed = 1
@@ -70,7 +72,7 @@ if __name__ == "__main__":
         if time.time() > nextMove:
             if n < len(game.moves):
                 moveMessage = game.moveMessage(n)
-                print "moveMessage = '%s'" % moveMessage
+                log.info("moveMessage = '%s'" % moveMessage)
                 f.send(moveMessage)
                 n += 1
             else:
@@ -83,7 +85,7 @@ if __name__ == "__main__":
                 ##print pnlEvents
                 f.send(resultMsg)
                 if debugFeedBook: fb.processMessage(resultMsg)
-                print "Waiting 5 sec to start next game..."
+                log.info("Waiting 5 sec to start next game...")
                 time.sleep(5)
 
                 ## TODO: load new game
@@ -103,7 +105,7 @@ if __name__ == "__main__":
         if debugFeedBook:
             if recoveryMessages is not None:
                 for rm in recoveryMessages:
-                    print "FB REPLAY:", rm
+                    log.info("FB REPLAY: " + rm)
                     fb.processMessage(rm)
 
         ## try to get and process one message
@@ -112,11 +114,11 @@ if __name__ == "__main__":
             time.sleep(0.1)
             continue
         elif m.gameId != game.gameId:
-            print "WARNING: MatchingEngine dropping message not for this game (%s) from %s: '%s'" % (game.gameId, g.name, m)
+            log.warning("MatchingEngine dropping message not for this game (%s) from %s: '%s'" % (game.gameId, g.name, m))
             if m.code == GatewayAddOrderMessage.code:
                 g.send(GatewayRejectMessage(g.name, m.gameId, m.goid, reason="BAD_GAME_ID"))
             continue
-        print "MatchingEngine got message from %s: '%s'" % (g.name, m)
+        log.info("MatchingEngine got message from %s: '%s'" % (g.name, m))
         events = []
         gatewayEvents = []
         if isinstance(m, GatewaySubmitOrderMessage):
@@ -152,7 +154,7 @@ if __name__ == "__main__":
         msg = ";".join(str(e) for e in events)
         f.send(msg)
         if debugFeedBook:
-            print "FB MESSAGE:", msg
+            log.info("FB MESSAGE:" + msg)
             fb.processMessage(msg)
 
         ## now check that the local book and reconstructed book look the same
@@ -161,5 +163,5 @@ if __name__ == "__main__":
             y = str(fb).split("\n")
             assert len(x) == len(y)
             z = "\n".join(xx + "  " + (" " if xx == yy else "X") + "   " + yy for xx,yy in zip(x,y))
-            print z
+            log.info("Book:\n"+z)
             assert x == y or (fb.bid() is None and fb.ask() is None)

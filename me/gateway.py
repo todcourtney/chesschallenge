@@ -15,6 +15,7 @@ from order import Order
 from messages import *
 import book
 import os
+from log import log
 
 class Messenger:
     SIZE = 32
@@ -26,7 +27,7 @@ class Messenger:
     def recvMessage(self):
         while len(self.recvBuffer) < Messenger.SIZE:
             data = self.socket.recv(1024)
-            print "data: ", data
+            log.info("data: " + data)
             if data == "": return None
             self.recvBuffer += data
         if len(self.recvBuffer) >= Messenger.SIZE:
@@ -42,7 +43,7 @@ class Messenger:
         totalSent = 0
         while totalSent < Messenger.SIZE:
             sent = self.socket.send(msg[totalSent:])
-            print "sent: ", sent
+            log.info("sent: %d" % sent)
             if sent == 0: return False
             totalSent += sent
         return True
@@ -98,18 +99,30 @@ class Gateway:
         self.inboundThread.daemon = True
         self.outboundThread.daemon = True
 
-        self.inboundThread.start()
-        self.outboundThread.start()
-
         if thread:
             assert self.clientMode
             self.thread = threading.Thread(target=self.runClient)
             self.thread.daemon = True
-            self.thread.start()
+        else:
+            self.thread = None
+
+        if self.name is not None:
+            self.setName(name)
+
+        self.inboundThread.start()
+        self.outboundThread.start()
+        if thread: self.thread.start()
 
         ## now identify ourselves
         if self.clientMode:
             self.outboundQueue.put(LoginMessage(self.name))
+
+    def setName(self, name):
+        self.name = name
+        self. inboundThread.name = "%-5s:%s" % ("GWIn" , self.name)
+        self.outboundThread.name = "%-5s:%s" % ("GWOut", self.name)
+        if self.thread is not None:
+            self.thread.name = "%-5s:%s" % ("GWCli", self.name)
 
     ## client side
     def addOrder(self, gameId, qty, side, price):
@@ -133,10 +146,10 @@ class Gateway:
     def handleInboundMessages(self):
         if self.name is None: ## TODO: make more robust
             m = self.messenger.recvMessage() ## wait for login message
-            self.name = LoginMessage.fromstr(m).name
+            self.setName(LoginMessage.fromstr(m).name)
         while True:
             m = self.messenger.recvMessage()
-            print "%s.handleInboundMessages() got message '%s'" % (self.name, m)
+            log.info("%s.handleInboundMessages() got message '%s'" % (self.name, m))
             if m is None:
                 self.close()
                 break
@@ -144,14 +157,14 @@ class Gateway:
                 try:
                     m = GatewayMessage.fromstr(m)
                 except ValueError as e:
-                    print "WARNING: conversion problem parsing message '%s'" % m
+                    log.warning("conversion problem parsing message '%s'" % m)
                 else:
                     self.inboundQueue.put(m)
 
     def handleOutboundMessages(self):
         while True:
             m = self.outboundQueue.get()
-            print "%s.handleOutboundMessages() sending message '%s'" % (self.name, m)
+            log.info("%s.handleOutboundMessages() sending message '%s'" % (self.name, m))
             if self.messenger is None: break
             success = self.messenger.sendMessage(str(m))
             if not success:
@@ -159,7 +172,7 @@ class Gateway:
                 break
 
     def close(self):
-        print self, " close" ## TODO
+        log.info("closing gateway %s" % self.name)
         self.messenger.close()
         del self.messenger
         self.messenger = None
@@ -220,22 +233,22 @@ class GatewayCollection:
         self.socket.bind(('', Gateway.PORT))
         self.socket.listen(20)
 
-        self.thread = threading.Thread(target=self.acceptGatewayConnections)
+        self.thread = threading.Thread(target=self.acceptGatewayConnections, name="GWAccept")
         self.thread.daemon = True
         self.thread.start()
 
     def acceptGatewayConnections(self):
         while True:
-            print "accept", self.socket
+            log.info("accept" + str(self.socket))
             (clientsocket, address) = self.socket.accept()
-            print clientsocket, address
+            log.info("%s:%s" % (clientsocket, address))
             ##clientsocket.setblocking(0)
             with self.lock:
                 ## first, prune dead gateways
                 for s in self.gateways.keys():
                     g = self.gateways[s]
                     if g.messenger is None:
-                        print "deleting disconnected gateway '%s'" % g.name
+                        log.info("deleting disconnected gateway '%s'" % g.name)
                         del self.gateways[s]
                 self.gateways[clientsocket] = Gateway(sock=clientsocket)
             time.sleep(1)

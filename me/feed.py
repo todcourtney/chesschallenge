@@ -2,6 +2,7 @@ import socket
 import struct
 import threading
 from messages import *
+from log import log
 
 class Listener:
     def onFeedMessage(rawMessage, seq, drop, message):
@@ -33,13 +34,14 @@ class Feed:
             self.receiveSocket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
         if thread:
-            self.thread = threading.Thread(target=self.run)
+            self.thread = threading.Thread(target=self.run, name="Feed")
             self.thread.daemon = True
             self.thread.start()
 
     def send(self, msg):
         msg = "%08d %s" % (self.sendSeq, msg)
         assert len(msg) < Feed.MAX_SIZE
+        log.info(msg)
         self.sendSeq += 1
         self.sendSocket.sendto(msg, (Feed.MCAST_GRP, Feed.MCAST_PORT))
 
