@@ -21,7 +21,7 @@ pnl:
   open pnl
 switch to level book?
 final message format standardization and cleanup
-switch to using logging library from python for thread-safe logging
+switch to using logging library from python for thread-safe logging (also see http://stackoverflow.com/questions/384076/how-can-i-color-python-logging-output and threading ident)
 
 
 game:
