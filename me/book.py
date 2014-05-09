@@ -241,7 +241,7 @@ class Book:
                 gm = GatewayDeleteOrderMessage.fromstr(m)
                 self.removeOrder(gm.oid)
             elif code == GatewayTradeMessage.code:
-                gm = ExchangeTradeMessage.fromstr(subm)
+                gm = GatewayTradeMessage.fromstr(m)
                 self.applyTrade(gm.oid, gm.qty)
             elif code == GatewaySettleMessage.code:
                 self.clear()
