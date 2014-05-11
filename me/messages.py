@@ -8,11 +8,26 @@ class ExchangeMessage:
     @classmethod
     def fromstr(cls, s):
         code, rest = s.split(",", 1)
-        if   code ==    ExchangeAddOrderMessage.code: return    ExchangeAddOrderMessage.fromstr(s)
+        if   code ==     ExchangeNewGameMessage.code: return     ExchangeNewGameMessage.fromstr(s)
+        elif code ==    ExchangeAddOrderMessage.code: return    ExchangeAddOrderMessage.fromstr(s)
         elif code == ExchangeCancelOrderMessage.code: return ExchangeCancelOrderMessage.fromstr(s)
         elif code ==       ExchangeTradeMessage.code: return       ExchangeTradeMessage.fromstr(s)
         else:
             raise ValueError("no ExchangeMessage type has code '%s'" % s)
+
+class ExchangeNewGameMessage(ExchangeMessage):
+    code = "XN"
+    def __init__(self, gameId):
+        self.gameId  = gameId
+
+    @classmethod
+    def fromstr(cls, s):
+        msgType, gameId = s.split(",")
+        assert msgType == cls.code
+        return cls(gameId)
+
+    def __str__(self):
+        return "%s,%s" % (self.code, self.gameId)
 
 class ExchangeBookMessage(ExchangeMessage):
     def __init__(self, gameId, oid, qty, side, price):
@@ -44,7 +59,6 @@ class ExchangeCancelOrderMessage(ExchangeBookMessage):
 
 class ExchangeTradeMessage(ExchangeBookMessage):
     code = "XT"
-
 
 
 

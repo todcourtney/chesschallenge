@@ -196,10 +196,7 @@ class Book:
         log.info(m)
 
         ## when a game starts, we don't need recovery, but we have to clear old orders
-        if m.startswith("CR"):
-            self.clear()
-        elif m.startswith("CN"):
-            self.needRecovery = False
+        if m.startswith("CR") or m.startswith("CN"):
             self.clear()
 
         ## only handle recovery messages if we need them
@@ -230,6 +227,9 @@ class Book:
                 elif code == ExchangeTradeMessage.code:
                     xm = ExchangeTradeMessage.fromstr(subm)
                     self.applyTrade(xm.oid, xm.qty)
+                elif code == ExchangeNewGameMessage.code:
+                    xm = ExchangeNewGameMessage.fromstr(subm)
+                    self.clear()
             return True
         elif m.startswith("G"):
             code, rest = m.split(",", 1)
@@ -291,6 +291,8 @@ class Book:
                 break
 
     def clear(self):
+        self.needRecovery = False
+        self.inRecovery   = False
         self.oidToPriceLevel = dict()
         for L in self.bids + self.asks:
             L.orders = []

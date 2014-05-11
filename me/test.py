@@ -13,7 +13,7 @@ test = sys.argv[2] if len(sys.argv) > 2 else "manual"
 class TestGatewayListener(gateway.Listener):
     def onGatewayMessage(self, g, message):
         log.info("TestGatewayListener.onGatewayMessage('%s') => pos = %d" % (message, g.pos))
-        log.info(g.liveOrders)
+        ##log.info(g.liveOrders)
         log.info("pendingOrders  = %s" % ([oid for oid in g.pendingOrders ]))
         log.info("pendingCancels = %s" % ([oid for oid in g.pendingCancels]))
 

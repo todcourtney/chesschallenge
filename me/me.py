@@ -94,6 +94,10 @@ if __name__ == "__main__":
 
                 newMsg = game.newMessage()
                 f.send(newMsg)
+
+                bookClearMessage = ExchangeNewGameMessage(game.gameId)
+                f.send(bookClearMessage)
+
                 b = MatchingBook() ## TODO: should send out cancels for everybody's orders?
                 if debugFeedBook: fb.processMessage(newMsg)
                 r = RecoveryBuilder(b,f)
