@@ -274,6 +274,12 @@ class Book:
                     break
 
     def applyTrade(self, oid, qty):
+        ## this should only happen for gateway trades, since the passive
+        ## and the aggressive side both get a report, and the aggressor
+        ## will have no order to remove
+        if oid not in self.oidToPriceLevel:
+            return
+
         restingOrders = self.oidToPriceLevel[oid].orders
         for ro in restingOrders:
             if ro.oid == oid:
