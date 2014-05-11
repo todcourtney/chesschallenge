@@ -100,6 +100,8 @@ class SimpleInventoryMarketMaker(strat.Strategy):
             bid = ask-1
         elif ask is None and bid is not None and bid < 100:
             ask = bid+1
+        elif bid is None and ask is None:
+            return
 
         qtyLong  = max(self.gateway.pos,0)
         qtyShort = min(self.gateway.pos,0)
