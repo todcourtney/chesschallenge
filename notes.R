@@ -91,3 +91,24 @@ for(N in 1:4) {
     z <- table(openings, results); z <- addmargins(head(z[order(-rowSums(z)),],10)); print(cbind(z, whiteWinFrac=round(z[,"1-0"]/z[,"Sum"],2)))
 }
 
+
+## look at success rate of various openings
+history <- split(a$move, a$src)
+a$history <- sapply(1:nrow(a), function(i) {if(i %% 10000 == 0) cat(i, "\n"); src <- a$src[i]; n <- a$n[i]; paste(history[[src]][1:n], collapse=" ")})
+winPct <- tapply(a$whiteWins, a$history, function(x) {ifelse(length(x) > 100, mean(x), NA)});
+winPct <- winPct[which(!is.na(winPct))];
+t(t(winPct))
+
+a$openingWinPct <- winPct[match(a$history, names(winPct))]
+
+
+## blending this lookup table with existing model
+
+
+
+
+
+
+
+
+a <- do.call("rbind", lapply(Sys.glob("~/chesschallenge/data/*.csv"), function(f) {cat(f, "\n"); read.csv(f, nrows=300000)}))
