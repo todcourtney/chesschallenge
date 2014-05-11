@@ -1340,6 +1340,27 @@ class ChessBoard:
         self.redo()
         return res
 
+    def prettyUnicodeBoardString(self):
+        """
+        Print the current board layout.
+        """
+        m = {"K": u"\u2654", "Q": u"\u2655", "R": u"\u2656", "B": u"\u2657", "N": u"\u2658", "P": u"\u2659",
+             "k": u"\u265A", "q": u"\u265B", "r": u"\u265C", "b": u"\u265D", "n": u"\u265E", "p": u"\u265F"}
+        s = u""
+        rank = 8
+        for r, l in enumerate(self._board):
+            for c in xrange(len(l)):
+                l[c] = m.get(l[c], l[c])
+                if l[c] == ".":
+                    if (c + int(r % 2 == 0)) % 2 == 0:
+                        l[c] = u"\u25A1" ## white square
+                    else:
+                        l[c] = u"\u25A0" ## black square
+            s += u"%d %s %s %s %s %s %s %s %s  \n" % (rank,l[0],l[1],l[2],l[3],l[4],l[5],l[6],l[7])
+            rank-=1
+        s += u"  a b c d e f g h\n"
+        return s
+
     def prettyBoardString(self):
         """
         Print the current board layout.
