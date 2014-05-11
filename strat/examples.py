@@ -86,6 +86,8 @@ class StockfishChessModel(model.FairPriceModel):
         s = min(s,  2.5)
         s = max(s, -2.5)
         self.fp = (0.4337105 + 0.1247885 * s)*100
+        self.fp = min(self.fp, 100)
+        self.fp = max(self.fp,   0)
 
     def fairPrice(self):
         return self.fp
