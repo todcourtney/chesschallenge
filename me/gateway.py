@@ -18,7 +18,7 @@ import os
 from log import log
 
 class Messenger:
-    SIZE = 32
+    SIZE = 64
     def __init__(self, socket):
         self.socket     = socket
         self.recvBuffer = ""
@@ -209,7 +209,7 @@ class Gateway:
                 if isinstance(m, GatewayTradeMessage):
                     if m.oid in self.liveOrders.oidToPriceLevel:
                         L = self.liveOrders.oidToPriceLevel[m.oid]
-                        if all(o.oid != m.oid for o in L):
+                        if all(o.oid != m.oid for o in L.orders):
                             self.pendingCancels.discard(m.goid)
 
             ## now that internal state is correct, notify listeners
