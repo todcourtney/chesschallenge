@@ -115,7 +115,7 @@ if __name__ == "__main__":
             continue
         elif m.gameId != game.gameId:
             log.warning("MatchingEngine dropping message not for this game (%s) from %s: '%s'" % (game.gameId, g.name, m))
-            if m.code == GatewayAddOrderMessage.code:
+            if m.code == GatewaySubmitOrderMessage.code:
                 g.send(GatewayRejectMessage(g.name, m.gameId, m.goid, reason="BAD_GAME_ID"))
             continue
         log.info("MatchingEngine got message from %s: '%s'" % (g.name, m))
