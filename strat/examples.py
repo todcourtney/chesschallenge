@@ -68,16 +68,18 @@ import strat
 import time
 
 from order import Order
+from log import log
 
 class SimpleInventoryMarketMaker(strat.Strategy):
     def __init__(self, name):
         super(SimpleInventoryMarketMaker, self).__init__(name)
 
-        self.maxPos = 5
+        self.maxPos = 10
         self.addQty = 1
+        self.cooldown = 2
 
     def onExchangeMessage(self, exchangeMessage):
-        print "onExchangeMessage('%s')" % exchangeMessage
+        log.info("onExchangeMessage('%s')" % exchangeMessage)
         ## apply to book (note you could check oid, see if it's yours, and not apply if you don't want to see own orders)
         self.book.processMessage(exchangeMessage)
 
@@ -87,9 +89,9 @@ class SimpleInventoryMarketMaker(strat.Strategy):
         if self.book.needRecovery or self.gameId is None: return
 
         ## cooldown
-        if not hasattr(self, "nextTime"): self.nextTime = time.time() + 3
+        if not hasattr(self, "nextTime"): self.nextTime = time.time() + self.cooldown
         if time.time() > self.nextTime:
-            self.nextTime = time.time() + 3
+            self.nextTime = time.time() + self.cooldown
         else:
             return
 
@@ -103,14 +105,15 @@ class SimpleInventoryMarketMaker(strat.Strategy):
         elif bid is None and ask is None:
             return
 
-        qtyLong  = max(self.gateway.pos,0)
-        qtyShort = min(self.gateway.pos,0)
-
-        print " ", bid, ask, qtyLong, qtyShort
+        qtyLong  =     max(self.gateway.pos,0)
+        qtyShort = abs(min(self.gateway.pos,0))
 
         ## move desired price away from inside price as inventory builds up
         bidPrice = bid - qtyLong
         askPrice = ask + qtyShort
+
+        log.info("ask = %(ask)3d qtyShort = %(qtyShort)3d askPrice = %(askPrice)3d" % locals())
+        log.info("bid = %(bid)3d qtyLong  = %(qtyLong)3d bidPrice = %(bidPrice)3d" % locals())
 
         ## check existing orders that haven't been canceled
         restingBuyQty, restingSellQty = 0,0
@@ -127,7 +130,7 @@ class SimpleInventoryMarketMaker(strat.Strategy):
             buyTooLow   = (o.side == Order.BUY  and o.price < bidPrice-10)
             sellTooHigh = (o.side == Order.SELL and o.price > askPrice+10)
 
-            print "   ", o.oid, o.qty, o.side, o.price, buyTooHigh, sellTooLow, buyTooLow, sellTooHigh
+            log.info("oid=%d qty=%d side=%d price=%d bad=%d%d%d%d" % (o.oid, o.qty, o.side, o.price, buyTooHigh, sellTooLow, buyTooLow, sellTooHigh))
             if buyTooHigh or sellTooLow or buyTooLow or sellTooHigh:
                 self.gateway.cancelOrder(self.gameId, o.oid)
             else:
@@ -146,12 +149,12 @@ class SimpleInventoryMarketMaker(strat.Strategy):
                 restingSellQty += o.qty
 
         ## place new orders
-        print " ", qtyLong, restingBuyQty, self.addQty, self.maxPos
+        log.info("qtyLong + restingBuyQty + self.addQty = %d + %d + %d with self.maxPos = %d %s" % (qtyLong, restingBuyQty, self.addQty, self.maxPos, "NEW" if (Order.BUY, bidPrice) not in levelsAlreadyPresent else ""))
         if qtyLong + restingBuyQty + self.addQty <= self.maxPos and (Order.BUY, bidPrice) not in levelsAlreadyPresent:
             self.gateway.addOrder(self.gameId, self.addQty, Order.BUY, price=bidPrice)
-        print " ", qtyShort, restingSellQty, self.addQty, self.maxPos
+        log.info("qtyShort + restingSellQty + self.addQty = %d + %d + %d with self.maxPos = %d %s" % (qtyShort, restingSellQty, self.addQty, self.maxPos, "NEW" if (Order.SELL, askPrice) not in levelsAlreadyPresent else ""))
         if qtyShort + restingSellQty + self.addQty <= self.maxPos and (Order.SELL, askPrice) not in levelsAlreadyPresent:
-            self.gateway.addOrder(self.gameId, self.addQty, Order.BUY, price=bidPrice)
+            self.gateway.addOrder(self.gameId, self.addQty, Order.SELL, price=askPrice)
 
 class MeTooMarketMaker(strat.Strategy):
     def onBookUpdateMessage(self, bookUpdateMessage):
