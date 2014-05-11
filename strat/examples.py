@@ -8,6 +8,8 @@ from log import log
 from ChessBoard import ChessBoard
 from messages import *
 
+import stockfish
+
 class SimpleMaterialCountChessModel(model.FairPriceModel):
     def __init__(self):
         self.materialScore = 0
@@ -41,10 +43,58 @@ class SimpleMaterialCountChessModel(model.FairPriceModel):
         if p > 0.99: p = 0.99
         return p*100
 
+class StockfishChessModel(model.FairPriceModel):
+    def __init__(self):
+        self.stockfish = stockfish.Stockfish()
+        self.fp = 50
+
+    def onChessMessage(self,m):
+        log.info(str(m))
+        chess = ChessBoard()
+        if not isinstance(m, ChessMoveMessage):
+            self.fp = 50
+            return
+
+        algebraicNotationMoves = []
+        for move in m.history:
+            chess.addTextMove(move)
+            algebraicNotationMoves.append(chess.getLastTextMove(ChessBoard.AN))
+
+        stockfishFEN, legalMoves, scores, pctM, pctE1, pctE2, total = self.stockfish.eval(algebraicNotationMoves)
+
+        ## Call:
+        ## lm(formula = whiteWins ~ s, data = a, na.action = na.exclude)
+        ##
+        ## Residuals:
+        ##     Min      1Q  Median      3Q     Max
+        ## -0.7457 -0.4437 -0.1217  0.4577  0.8783
+        ##
+        ## Coefficients:
+        ##              Estimate Std. Error t value Pr(>|t|)
+        ## (Intercept) 0.4337105  0.0012811   338.5   <2e-16 ***
+        ## s           0.1247885  0.0008928   139.8   <2e-16 ***
+        ## ---
+        ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+        ##
+        ## Residual standard error: 0.4669 on 137618 degrees of freedom
+        ##   (70 observations deleted due to missingness)
+        ## Multiple R-squared:  0.1243,	Adjusted R-squared:  0.1243
+        ## F-statistic: 1.953e+04 on 1 and 137618 DF,  p-value: < 2.2e-16
+
+        log.info(scores)
+        s = total
+        s = min(s,  2.5)
+        s = max(s, -2.5)
+        self.fp = (0.4337105 + 0.1247885 * s)*100
+
+    def fairPrice(self):
+        return self.fp
+
 class SimpleChessMoveExecutor(strat.Strategy):
     def __init__(self, name):
         super(SimpleChessMoveExecutor, self).__init__(name)
-        self.model = SimpleMaterialCountChessModel()
+        ##self.model = SimpleMaterialCountChessModel()
+        self.model = StockfishChessModel()
 
     def onChessMessage(self,m):
         ## pass through to model
