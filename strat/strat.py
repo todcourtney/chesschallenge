@@ -1,6 +1,7 @@
 import gateway, feed, book
 import ChessBoard
 from messages import *
+from log import log
 
 class Strategy(object, gateway.Listener, feed.Listener):
     def __init__(self, name):
@@ -11,7 +12,7 @@ class Strategy(object, gateway.Listener, feed.Listener):
         self.gameId  = None
 
     def onGatewayMessage(self, gateway, message):
-        print "Strategy.onGatewayMessage('%s')" % message
+        log.info("Strategy.onGatewayMessage('%s')" % message)
         pass
 
     def onFeedMessage(self, rawMessage, seq, drop, message):
@@ -20,17 +21,18 @@ class Strategy(object, gateway.Listener, feed.Listener):
         and pass to the appropriate callback.
         """
 
-        print rawMessage
+        log.info(rawMessage)
         if isinstance(message, ExchangeMessage) or (isinstance(message, str) and message.startswith("B")):
-            print "  => ExchangeMessage: ", message
+            log.info("  => ExchangeMessage: %s" % message)
             self.onExchangeMessage(message)
         elif isinstance(message, ChessMessage):
+            log.info("  => ChessMessage: %s" % message)
             self.onChessMessage(message)
 
     def onChessMessage(self, chessMessage):
-        print "Strategy.onChessMessage('%s')" % chessMessage
+        log.info("Strategy.onChessMessage('%s')" % chessMessage)
         pass
 
     def onExchangeMessage(self, exchangeMessage):
-        print "Strategy.onExchangeMessage('%s')" % exchangeMessage
+        log.info("Strategy.onExchangeMessage('%s')" % exchangeMessage)
         pass

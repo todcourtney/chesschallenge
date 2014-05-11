@@ -1,74 +1,90 @@
-##import strat
-##from me import Order ## TODO: will want to factor out actual matching engine code
-##from ChessBoard import ChessBoard
-##
-##class SimpleChessModel(strat.Model):
-##    def __init__(self):
-##        self.chess = ChessBoard()
-##
-##    def onChessMove(self,move):
-##        self.chess.addTextMove(move)
-##        values = {"P": 1, "N": 3, "B": 3, "R": 5, "Q": 9, "K": 1}
-##        board = self.chess.getBoard()
-##        W,B = 0,0
-##        for rank in board:
-##            for square in rank:
-##                if square != ".":
-##                    if square.isupper():
-##                        W += values[square]
-##                    else:
-##                        B += values[square.upper()]
-##        self.materialScore = W-B
-##
-##    def fairProbabilityEstimate(self):
-##        p = 0.50 + (self.materialScore*0.01)
-##        if p < 0.01: p = 0.01
-##        if p > 0.99: p = 0.99
-##        return p
-##
-##class SimpleExecutor(strat.Executor):
-##    def __init__(self):
-##        self.model = SimpleChessModel()
-##        self.liveOrders = []
-##
-##    def onChessMove(self,move):
-##        ## pass through to model
-##        self.model.onChessMove(move)
-##
-##        ## decide my bid price and ask price
-##        fairPrice = self.model.fairProbabilityEstimate()*100
-##        buyPrice  = round(fairPrice-2)
-##        sellPrice = round(fairPrice+2)
-##        print "prices: ", fairPrice, buyPrice, sellPrice
-##
-##        ## keep desired quantity showing at indicated price
-##        desiredQty = 10
-##        alreadyHaveBuy  = False
-##        alreadyHaveSell = False
-##        for o in self.liveOrders:
-##            if o.side == Order.BUY:
-##                if o.price == buyPrice:
-##                    alreadyHaveBuy = True
-##                    if o.qty < desiredQty:
-##                        self.sendOrder(desiredQty-o.qty, Order.BUY, buyPrice)
-##                elif o.price > buyPrice:
-##                    self.cancelOrder(o.oid)
-##            else:
-##                if o.price == sellPrice:
-##                    alreadyHaveSell = True
-##                    if o.qty < desiredQty:
-##                        self.sendOrder(desiredQty-o.qty, Order.SELL, sellPrice)
-##                elif o.price < sellPrice:
-##                    self.cancelOrder(o.oid)
-##
-##        if not alreadyHaveBuy : self.sendOrder(desiredQty, Order.BUY , buyPrice)
-##        if not alreadyHaveSell: self.sendOrder(desiredQty, Order.SELL, sellPrice)
-
+import model
 import strat
 import time
 
 from order import Order
 from log import log
+
+from ChessBoard import ChessBoard
+from messages import *
+
+class SimpleMaterialCountChessModel(model.FairPriceModel):
+    def __init__(self):
+        self.materialScore = 0
+
+    def onChessMessage(self,m):
+        log.info(str(m))
+        chess = ChessBoard()
+        if not isinstance(m, ChessMoveMessage):
+            self.materialScore = 0
+            return
+
+        for move in m.history:
+            chess.addTextMove(move)
+
+        values = {"P": 1, "N": 3, "B": 3, "R": 5, "Q": 9, "K": 1}
+        board = chess.getBoard()
+        W,B = 0,0
+        for rank in board:
+            for square in rank:
+                if square != ".":
+                    if square.isupper():
+                        W += values[square]
+                    else:
+                        B += values[square.upper()]
+        self.materialScore = W-B
+        log.info("materialScore = %d" % self.materialScore)
+
+    def fairPrice(self):
+        p = 0.50 + (self.materialScore*0.01)
+        if p < 0.01: p = 0.01
+        if p > 0.99: p = 0.99
+        return p*100
+
+class SimpleChessMoveExecutor(strat.Strategy):
+    def __init__(self, name):
+        super(SimpleChessMoveExecutor, self).__init__(name)
+        self.model = SimpleMaterialCountChessModel()
+
+    def onChessMessage(self,m):
+        ## pass through to model
+        self.model.onChessMessage(m)
+
+        ## decide my bid price and ask price
+        fairPrice = self.model.fairPrice()
+        buyPrice  = round(fairPrice-2)
+        sellPrice = round(fairPrice+2)
+        log.info("fairPrice = %d buyPrice = %d sellPrice = %d" % (fairPrice, buyPrice, sellPrice))
+
+        ## keep desired quantity showing at indicated price
+        desiredQty = 10
+        alreadyHaveBuy  = False
+        alreadyHaveSell = False
+        ordersPending, ordersLive, ordersCanceling = self.gateway.orders()
+        if len(ordersPending):
+            log.info("already have %d pending orders" % len(ordersPending))
+            return
+
+        for o in ordersLive:
+            log.info("oid=%d qty=%d side=%d price=%d" % (o.oid, o.qty, o.side, o.price))
+            if o.side == Order.BUY:
+                if o.price == buyPrice:
+                    alreadyHaveBuy = True
+                    if o.qty < desiredQty:
+                        self.addOrder(m.gameId, desiredQty-o.qty, Order.BUY, buyPrice)
+                elif True or o.price > buyPrice:
+                    self.gateway.cancelOrder(m.gameId, o.oid)
+            else:
+                if o.price == sellPrice:
+                    alreadyHaveSell = True
+                    if o.qty < desiredQty:
+                        self.addOrder(m.gameId, desiredQty-o.qty, Order.SELL, sellPrice)
+                elif True or o.price < sellPrice:
+                    self.gateway.cancelOrder(m.gameId, o.oid)
+
+        if not alreadyHaveBuy : self.gateway.addOrder(m.gameId, desiredQty, Order.BUY , buyPrice)
+        if not alreadyHaveSell: self.gateway.addOrder(m.gameId, desiredQty, Order.SELL, sellPrice)
+
 
 class SimpleInventoryMarketMaker(strat.Strategy):
     def __init__(self, name):
@@ -163,7 +179,8 @@ class MeTooMarketMaker(strat.Strategy):
 
 if __name__ == "__main__":
     import sys
-    x = SimpleInventoryMarketMaker("SIMM")
+    x = SimpleChessMoveExecutor("SCX")
+    ##x = SimpleInventoryMarketMaker("SIMM")
     while True:
         time.sleep(1)
         pass
