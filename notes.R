@@ -38,3 +38,56 @@ S <- c(0,1); plot(bin(a$s, a$whiteWins, n=100), type="o", ylim=S); grid();
 summary(L <- lm(whiteWins ~ s                            , data=a, na.action=na.exclude)); plot(bin(predict(L), a$whiteWins, n=100), type="o", xlim=S, ylim=S); grid(); abline(a=0,b=1,col="grey",lty=3);
 summary(L <- lm(whiteWins ~ s + s*n                      , data=a, na.action=na.exclude)); plot(bin(predict(L), a$whiteWins, n=100), type="o", xlim=S, ylim=S); grid(); abline(a=0,b=1,col="grey",lty=3);
 summary(L <- lm(whiteWins ~ s + s*pctMidGame - pctMidGame, data=a, na.action=na.exclude)); plot(bin(predict(L), a$whiteWins, n=100), type="o", xlim=S, ylim=S); grid(); abline(a=0,b=1,col="grey",lty=3);
+
+
+
+
+## simple lag-by-src
+L <- c(NA, 1:(nrow(a)-1)); L[which(a$src != a$src[L])] <- NA;
+a$sL1 <- a$s[L]
+
+## adding one lag of score helps to solve bouncing-around problems, bumps R2 12%->15%
+par(mfrow=c(2,2));
+S <- c(0,1); summary(L <- lm(whiteWins ~ s      , data=a, na.action=na.exclude)); plot(bin(predict(L), a$whiteWins, n=100), type="o", xlim=S, ylim=S); grid(); abline(a=0,b=1,col="grey",lty=3);
+S <- c(0,1); summary(L <- lm(whiteWins ~ s + sL1, data=a, na.action=na.exclude)); plot(bin(predict(L), a$whiteWins, n=100), type="o", xlim=S, ylim=S); grid(); abline(a=0,b=1,col="grey",lty=3);
+
+
+
+
+
+## best all-in model so far
+S <- c(0,1); summary(L <- lm(whiteWins ~ s + sL1 + s*pctMidGame - pctMidGame, data=a, na.action=na.exclude)); plot(bin(predict(L), a$whiteWins, n=100), type="o", xlim=S, ylim=S); grid(); abline(a=0,b=1,col="grey",lty=3);
+
+## Call:
+## lm(formula = whiteWins ~ s + sL1 + s * pctMidGame - pctMidGame, 
+##     data = a, na.action = na.exclude)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.94734 -0.44596 -0.01334  0.46900  1.07382 
+## 
+## Coefficients:
+##                 Estimate  Std. Error t value Pr(>|t|)    
+## (Intercept)   0.43676265  0.00127895  341.50   <2e-16 ***
+## s             0.14391660  0.00178097   80.81   <2e-16 ***
+## sL1           0.06031617  0.00121081   49.81   <2e-16 ***
+## s:pctMidGame -0.00114424  0.00002351  -48.68   <2e-16 ***
+## ---
+## 
+## Residual standard error: 0.4569 on 135845 degrees of freedom
+##   (1841 observations deleted due to missingness)
+## Multiple R-squared:  0.1615,	Adjusted R-squared:  0.1615 
+## F-statistic:  8721 on 3 and 135845 DF,  p-value: < 2.2e-16
+
+
+
+
+
+
+## investigate use of openings
+for(N in 1:4) {
+    openings <- tapply(a$move, a$src, function(x) {paste(head(x,N), collapse=" ")});
+    results <- a$result[match(names(openings), a$src)];
+    z <- table(openings, results); z <- addmargins(head(z[order(-rowSums(z)),],10)); print(cbind(z, whiteWinFrac=round(z[,"1-0"]/z[,"Sum"],2)))
+}
+
