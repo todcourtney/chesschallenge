@@ -5,6 +5,11 @@ import sys
 
 import book, feed, pnl
 from ChessBoard import ChessBoard
+
+import logging
+from log import log
+log.setLevel(logging.CRITICAL)
+
 chess = ChessBoard()
 
 b = book.Book()
