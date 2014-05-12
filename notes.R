@@ -99,6 +99,11 @@ winPct <- tapply(a$whiteWins, a$history, function(x) {ifelse(length(x) > 100, me
 winPct <- winPct[which(!is.na(winPct))];
 t(t(winPct))
 
+## for export to python
+cat(paste("{", paste(sprintf("'%s':%f", names(winPct), winPct), collapse=", "), "}", sep=""), "\n")
+## prettier
+cat("{\n"); n <- names(winPct); for(i in 1:length(winPct)) {if(i > 1 && substr(n[i], 1, nchar(n[i-1])) != n[i-1]) cat("\n"); cat(sprintf(", '%s':%f", n[i], winPct[i]));}; cat("\n}\n")
+
 a$openingWinPct <- winPct[match(a$history, names(winPct))]
 
 

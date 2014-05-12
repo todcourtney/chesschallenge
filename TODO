@@ -1,6 +1,5 @@
 finish reorganize public vs private
 gateway:
-  live, pending orders (need to deliver rejects to gateway, and need client oid to make pending match up to ack or reject)
   gateway/me enforced risk: max pos, max order size, max orders, valid price, max order rate
   pnl (need marks, probably best to use Book)
 simple strategies
