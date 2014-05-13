@@ -6,6 +6,14 @@ class ChessGame:
         self.moves  = moves
         self.result = result
 
+    @classmethod
+    def fromstr(cls, l):
+        srcfile, line, result, moves = l.split(",")
+        gameId = "%s:%s" % (srcfile, line)
+        moves = moves.rstrip().split(" ")
+
+        return cls(gameId, moves, result)
+
     def newMessage(self):
         return ChessNewGameMessage(self.gameId)
 
