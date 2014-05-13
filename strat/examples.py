@@ -13,6 +13,7 @@ class SimpleChessMoveExecutor(strat.Strategy):
     def __init__(self, name, model):
         super(SimpleChessMoveExecutor, self).__init__(name)
         self.model = model
+        self.maxPos = 100
 
     def onChessMessage(self,m):
         ## pass through to model
@@ -36,7 +37,7 @@ class SimpleChessMoveExecutor(strat.Strategy):
         alreadyHaveSell = False
         ordersPending, ordersLive, ordersCanceling = self.gateway.orders()
         if len(ordersPending):
-            log.info("already have %d pending orders" % len(ordersPending))
+            log.info("already have %d pending orders: %s" % (len(ordersPending), [(o.owner, o.oid) for o in ordersPending]))
             return
 
         for o in ordersLive:
@@ -56,8 +57,8 @@ class SimpleChessMoveExecutor(strat.Strategy):
                 elif True or o.price < sellPrice:
                     self.gateway.cancelOrder(m.gameId, o.oid)
 
-        if not alreadyHaveBuy : self.gateway.addOrder(m.gameId, desiredQty, Order.BUY , buyPrice)
-        if not alreadyHaveSell: self.gateway.addOrder(m.gameId, desiredQty, Order.SELL, sellPrice)
+        if not alreadyHaveBuy  and self.gateway.pos + desiredQty <  self.maxPos: self.gateway.addOrder(m.gameId, desiredQty, Order.BUY , buyPrice)
+        if not alreadyHaveSell and self.gateway.pos - desiredQty > -self.maxPos: self.gateway.addOrder(m.gameId, desiredQty, Order.SELL, sellPrice)
 
 
 class SimpleInventoryMarketMaker(strat.Strategy):
@@ -153,9 +154,9 @@ class MeTooMarketMaker(strat.Strategy):
 
 if __name__ == "__main__":
     import sys
-    x = SimpleChessMoveExecutor("SCO", OpeningChessModel("OpeningChessModel"))
-    y = SimpleChessMoveExecutor("SCM", SimpleMaterialCountChessModel("SimpleMaterialCountChessModel"))
-    z = SimpleChessMoveExecutor("SCS", StockfishChessModel("StockfishChessModel"))
+    if "SCO" in sys.argv: x = SimpleChessMoveExecutor("SCO", OpeningChessModel("OpeningChessModel"))
+    if "SCM" in sys.argv: y = SimpleChessMoveExecutor("SCM", SimpleMaterialCountChessModel("SimpleMaterialCountChessModel"))
+    if "SCS" in sys.argv: z = SimpleChessMoveExecutor("SCS", StockfishChessModel("StockfishChessModel"))
     ##x = SimpleInventoryMarketMaker("SIMM")
     while True:
         time.sleep(1)
