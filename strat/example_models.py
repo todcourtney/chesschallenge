@@ -80,7 +80,7 @@ class StockfishChessModel(model.FairPriceModel):
     def __init__(self, name, listeners=None):
         model.FairPriceModel.__init__(self, name, listeners)
         self.stockfish = stockfish.Stockfish()
-        self.head = ['total', 's']
+        self.head = ['total', 's', 'pctM']
         self.clear()
 
     def clear(self):
@@ -120,13 +120,14 @@ class StockfishChessModel(model.FairPriceModel):
         ## Multiple R-squared:  0.1243,	Adjusted R-squared:  0.1243
         ## F-statistic: 1.953e+04 on 1 and 137618 DF,  p-value: < 2.2e-16
 
-        log.info(scores)
+        ##log.info(scores)
         s = total
         s = min(s,  2.5)
         s = max(s, -2.5)
 
         self.feat['total'] = total
         self.feat['s'] = s
+        self.feat['pctM'] = pctM
 
         self.fp = (0.4337105 + 0.1247885 * s)*100
         self.fp = min(self.fp, 100)
