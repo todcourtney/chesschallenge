@@ -193,7 +193,7 @@ class Gateway:
 
             ## keep track of pending, live, and pending cancel
             with self.pendingLock:
-                if isinstance(m, GatewayAddOrderMessage) or isinstance(m, GatewayRejectMessage):
+                if isinstance(m, GatewayAddOrderMessage) or isinstance(m, GatewayRejectMessage) or isinstance(m, GatewayTradeMessage):
                     if m.goid in self.pendingOrders:
                         del self.pendingOrders[m.goid]
                 elif isinstance(m, GatewayDeleteOrderMessage):
