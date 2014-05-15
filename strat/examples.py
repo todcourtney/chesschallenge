@@ -27,9 +27,9 @@ class SimpleChessMoveExecutor(strat.Strategy):
                 self.gateway.cancelOrder(m.gameId, o.oid)
             return
 
-        buyPrice  = round(fairPrice-2)
-        sellPrice = round(fairPrice+2)
-        log.info("fairPrice = %d buyPrice = %d sellPrice = %d" % (fairPrice, buyPrice, sellPrice))
+        buyPrice  = int(round(fairPrice-2))
+        sellPrice = int(round(fairPrice+2))
+        log.info("fairPrice = %f buyPrice = %d sellPrice = %d" % (fairPrice, buyPrice, sellPrice))
 
         ## keep desired quantity showing at indicated price
         desiredQty = 10
