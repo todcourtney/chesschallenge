@@ -10,6 +10,54 @@ import logging
 from log import log
 log.setLevel(logging.CRITICAL)
 
+prettyBoard = True
+if prettyBoard:
+    try:
+        import pygame
+        import inspect, os
+        chessboardDirectory = os.path.dirname(inspect.getfile(ChessBoard))
+
+        pygame.init()
+        pygameScreen = pygame.display.set_mode((480, 480),1)
+        pygame.display.set_caption('')
+
+        # load all images
+        pieces = [{},{}]
+        pieces[0]["r"] = pygame.image.load(chessboardDirectory + "/img/brw.png")
+        pieces[0]["n"] = pygame.image.load(chessboardDirectory + "/img/bnw.png")
+        pieces[0]["b"] = pygame.image.load(chessboardDirectory + "/img/bbw.png")
+        pieces[0]["k"] = pygame.image.load(chessboardDirectory + "/img/bkw.png")
+        pieces[0]["q"] = pygame.image.load(chessboardDirectory + "/img/bqw.png")
+        pieces[0]["p"] = pygame.image.load(chessboardDirectory + "/img/bpw.png")
+        pieces[0]["R"] = pygame.image.load(chessboardDirectory + "/img/wrw.png")
+        pieces[0]["N"] = pygame.image.load(chessboardDirectory + "/img/wnw.png")
+        pieces[0]["B"] = pygame.image.load(chessboardDirectory + "/img/wbw.png")
+        pieces[0]["K"] = pygame.image.load(chessboardDirectory + "/img/wkw.png")
+        pieces[0]["Q"] = pygame.image.load(chessboardDirectory + "/img/wqw.png")
+        pieces[0]["P"] = pygame.image.load(chessboardDirectory + "/img/wpw.png")
+        pieces[0]["."] = pygame.image.load(chessboardDirectory + "/img/w.png")
+        pieces[1]["r"] = pygame.image.load(chessboardDirectory + "/img/brb.png")
+        pieces[1]["n"] = pygame.image.load(chessboardDirectory + "/img/bnb.png")
+        pieces[1]["b"] = pygame.image.load(chessboardDirectory + "/img/bbb.png")
+        pieces[1]["k"] = pygame.image.load(chessboardDirectory + "/img/bkb.png")
+        pieces[1]["q"] = pygame.image.load(chessboardDirectory + "/img/bqb.png")
+        pieces[1]["p"] = pygame.image.load(chessboardDirectory + "/img/bpb.png")
+        pieces[1]["R"] = pygame.image.load(chessboardDirectory + "/img/wrb.png")
+        pieces[1]["N"] = pygame.image.load(chessboardDirectory + "/img/wnb.png")
+        pieces[1]["B"] = pygame.image.load(chessboardDirectory + "/img/wbb.png")
+        pieces[1]["K"] = pygame.image.load(chessboardDirectory + "/img/wkb.png")
+        pieces[1]["Q"] = pygame.image.load(chessboardDirectory + "/img/wqb.png")
+        pieces[1]["P"] = pygame.image.load(chessboardDirectory + "/img/wpb.png")
+        pieces[1]["."] = pygame.image.load(chessboardDirectory + "/img/b.png")
+    except ImportError:
+        prettyBoard = False
+
+def drawPrettyBoard(board):
+    for y, rank in enumerate(board):
+        for x, p in enumerate(rank):
+            pygameScreen.blit(pieces[(x+y)%2][p],(x*60,y*60))
+    pygame.display.flip()
+
 chess = ChessBoard()
 
 b = book.Book()
@@ -97,6 +145,11 @@ try:
 
         stdscr.addstr(1,0,"Game ID: %s" % gameId)
         stdscr.refresh()
+
+        if prettyBoard:
+            drawPrettyBoard(chess.getBoard())
+            pygame.display.set_caption('%s %s %s' % (gameId, move, chessResult))
+
         prevSeq = seq
 
 finally:
@@ -105,4 +158,4 @@ finally:
     stdscr.keypad(0)
     curses.echo()
     curses.endwin()
-
+    if prettyBoard: pygame.quit()
