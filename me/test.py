@@ -20,7 +20,7 @@ class TestGatewayListener(gateway.Listener):
 L = TestGatewayListener()
 
 log.info("Starting gateway named %s", name)
-g = gateway.Gateway(name=name, thread=True, listeners=[L])
+g = gateway.Gateway(name=name, listeners=[L])
 
 while True:
     if test == "manual":

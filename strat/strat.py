@@ -5,8 +5,8 @@ from log import log
 
 class Strategy(object, gateway.Listener, feed.Listener):
     def __init__(self, name):
-        self.gateway = gateway.Gateway(name=name, thread=True, listeners=[self])
-        self.feed    = feed.Feed(send=False, receive=True, thread=True, listeners=[self])
+        self.gateway = gateway.Gateway(name=name, listeners=[self])
+        self.feed    = feed.Feed(listeners=[self])
         self.book    = book.Book()
         self.board   = ChessBoard.ChessBoard()
         self.gameId  = None

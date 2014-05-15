@@ -9,11 +9,11 @@ class FeedPrinter(feed.Listener):
 
 if useThread:
   L = FeedPrinter()
-  f = feed.Feed(send=False, receive=True, thread=True, listeners=[L])
+  f = feed.Feed(listeners=[L])
   while True:
     time.sleep(1)
 else:  
-  f = feed.Feed(send=False, receive=True)
+  f = feed.Feed()
   while True:
     msg, seq, drop, m = f.recv()
     print "%08d %1s: %s" % (seq, "*" if drop else " ", str(m))

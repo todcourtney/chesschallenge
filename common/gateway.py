@@ -1,30 +1,29 @@
-## main class has accept => creates new gateways on demand
-##
-## gateway operates on own threads:
-##   (a) blocking read, buffers and populates message queue
-##   (b) notification and logging thread: block on something to notify, then notify all sockets that listen (note is receiver paced, so always send to drop copy first)
-##   (c) disconnect will shut down receiver socket, send all pending notifications, and kill the gateway
-##
-## matching engine will poll in random order and grab a message from a non-empty queue (non-blocking)
-
 import threading
 import socket
 import Queue
 import time
+import os
+
 from order import Order
 from messages import *
 import book
-import os
 from log import log
 
 class Messenger:
+    """
+    Allow basic messaging over TCP, which is stream based. When we recv() from the
+    socket, we may not get a complete message, so we need to buffer and keep issuing
+    recv() until we get one whole message to return, keeping any remainder in the buffer.
+
+    For simplicity, this class uses fixed-size messages.
+    """
     SIZE = 64
     def __init__(self, socket):
         self.socket     = socket
         self.recvBuffer = ""
 
-    ## block and return one message of indicated size
     def recvMessage(self):
+        """Block and return one message of size Message.SIZE, with trailing whitespace stripped."""
         while len(self.recvBuffer) < Messenger.SIZE:
             data = self.socket.recv(1024)
             log.info("data: " + data)
@@ -35,8 +34,12 @@ class Messenger:
             self.recvBuffer = self.recvBuffer[Messenger.SIZE:]
             return m.rstrip()
 
-    ## send one message (receiver paced)
     def sendMessage(self, msg):
+        """
+        Send one message, fragmenting if needed. Note that TCP is receiver-paced, so this
+        function could block for a long time when the other-side receiver is slow. The
+        Gateway class handles this with a queue and a separate thread.
+        """
         assert len(msg) <= Messenger.SIZE
         msg = ("%-" + str(Messenger.SIZE) + "s") % msg
         assert len(msg) == Messenger.SIZE
@@ -49,6 +52,7 @@ class Messenger:
         return True
 
     def close(self):
+        """Shutdown and close the socket being used for messaging."""
         try:
             self.socket.shutdown(socket.SHUT_RDWR)
             self.socket.close()
@@ -56,21 +60,43 @@ class Messenger:
             pass
 
 class Listener:
+    """
+    Anyone wishing to listen to a Gateway should implement this interface by inheriting from it.
+    If Gateway is constructed with listeners, it checks that they all inherit from this class.
+    """
     def onGatewayMessage(self, gateway, message):
+        """
+        When the Gateway receives a message, it will generate this callback to any listeners.
+        The information passed includes the gateway itself, and the (parsed) message.
+        """
         pass
 
 class Gateway:
+    """
+    Handle all private communications between a strategy and the exchange, including order send,
+    rejection, acknowledgement, trade, cancel, and cancel acknowledgement messages. Relies on
+    the CHESS_GATEWAY environment variable to be set correctly when running in client mode.
+    """
     HOST = os.getenv("CHESS_GATEWAY", "localhost")
     PORT = 9999
-    def __init__(self, name=None, sock=None, thread=False, listeners=None):
+    def __init__(self, name=None, sock=None, listeners=None):
         self.clientMode = (sock is None)
-        self.name = name
+        self.name       = name
         self.liveOrders = None
         self.pos        = None
 
+        ## keep track of pending orders
         self.pendingLock    = threading.Lock()
         self.pendingOrders  = dict()
         self.pendingCancels = set()
+
+        ## verify that listeners are of the correct class
+        self.listeners = listeners if listeners is not None else []
+        for L in self.listeners:
+            assert isinstance(L, Listener)
+
+        ## only need thread if we have listeners
+        thread = len(self.listeners) > 0
 
         if self.clientMode:
             assert self.name is not None
@@ -84,12 +110,12 @@ class Gateway:
             self.socket = sock
             assert not thread
 
-        self.listeners = listeners if listeners is not None else []
-        for L in self.listeners:
-            assert isinstance(L, Listener)
-
+        ## handle fragmented TCP messaging as documented in Messenger class
         self.messenger = Messenger(self.socket)
 
+        ## need queues to handle inbound and outbound messaging because TCP is
+        ## receiver-paced, and we would otherwise risk holding up ourselves on
+        ## outbound messages, or the other side on inbound messages
         self.inboundQueue  = Queue.Queue()
         self.outboundQueue = Queue.Queue()
 
@@ -100,12 +126,14 @@ class Gateway:
         self.outboundThread.daemon = True
 
         if thread:
+            ## client thread will deliver callbacks
             assert self.clientMode
             self.thread = threading.Thread(target=self.runClient)
             self.thread.daemon = True
         else:
             self.thread = None
 
+        ## the client will specify a name, but the server will expect a name at login
         if self.name is not None:
             self.setName(name)
 
@@ -113,12 +141,13 @@ class Gateway:
         self.outboundThread.start()
         if thread: self.thread.start()
 
-        ## now identify ourselves
+        ## now identify ourselves if we are the client
         if self.clientMode:
             self.outboundQueue.put(LoginMessage(self.name))
 
     def setName(self, name):
         self.name = name
+        ## these thread names are used in the logging class
         self. inboundThread.name = "%-5s:%s" % ("GWIn" , self.name)
         self.outboundThread.name = "%-5s:%s" % ("GWOut", self.name)
         if self.thread is not None:
@@ -126,6 +155,7 @@ class Gateway:
 
     ## client side
     def addOrder(self, gameId, qty, side, price):
+        """Add a new order to the book for the given gameId. Note that this order can be passive or aggressive."""
         self.goid += 1
         m = GatewaySubmitOrderMessage(gameId, self.goid, qty, side, price)
         with self.pendingLock:
@@ -133,17 +163,29 @@ class Gateway:
         self.outboundQueue.put(m)
 
     def cancelOrder(self, gameId, oid):
+        """Request a cancel for the indicated order id."""
         assert gameId is not None
         with self.pendingLock:
             self.pendingCancels.add(oid)
         self.outboundQueue.put(GatewayCancelOrderMessage(gameId, oid))
 
-    ## server side
+    def orders(self):
+        """
+        Return three lists of orders: those that are pending but not yet live at the exchange, those that have been
+        accepted and are now alive, and those that are now alive, but have had cancels requested.
+        """
+        ordersPending   = [Order(0, m.qty, m.side, m.price, goid=m.goid) for m in self.pendingOrders.values()]
+        ordersLive      = [o for L in self.liveOrders.bids + self.liveOrders.asks for o in L.orders]
+        ordersCanceling = [o for L in self.liveOrders.bids + self.liveOrders.asks for o in L.orders if o.goid in self.pendingCancels]
+        return ordersPending, ordersLive, ordersCanceling
+
+    ## server side (used by matching engine)
     def send(self, m):
         self.outboundQueue.put(str(m))
 
     ## internals
     def handleInboundMessages(self):
+        """Handle all inbound messages in a loop. Called only by the inbound thread in Gateway.__init__."""
         if self.name is None: ## TODO: make more robust
             m = self.messenger.recvMessage() ## wait for login message
             self.setName(LoginMessage.fromstr(m).name)
@@ -162,6 +204,7 @@ class Gateway:
                     self.inboundQueue.put(m)
 
     def handleOutboundMessages(self):
+        """Handle all outbound messages in a loop. Called only by the outbound thread in Gateway.__init__."""
         while True:
             m = self.outboundQueue.get()
             log.info("%s.handleOutboundMessages() sending message '%s'" % (self.name, m))
@@ -172,6 +215,7 @@ class Gateway:
                 break
 
     def close(self):
+        """Close connections in the event of a gateway error."""
         log.info("closing gateway %s" % self.name)
         self.messenger.close()
         del self.messenger
@@ -182,6 +226,7 @@ class Gateway:
         pass
 
     def runClient(self):
+        """Handle delivery of callbacks to any listeners. Only called by the client therad in Gateway.__init__."""
         while True:
             m = self.inboundQueue.get()
 
@@ -215,56 +260,4 @@ class Gateway:
             ## now that internal state is correct, notify listeners
             for L in self.listeners:
                 L.onGatewayMessage(self, m)
-
-    def orders(self):
-        ordersPending   = [Order(0, m.qty, m.side, m.price, goid=m.goid) for m in self.pendingOrders.values()]
-        ordersLive      = [o for L in self.liveOrders.bids + self.liveOrders.asks for o in L.orders]
-        ordersCanceling = [o for L in self.liveOrders.bids + self.liveOrders.asks for o in L.orders if o.goid in self.pendingCancels]
-        return ordersPending, ordersLive, ordersCanceling
-
-
-class GatewayCollection:
-    def __init__(self):
-        self.lock = threading.Lock()
-        self.gateways = dict()
-
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind(('', Gateway.PORT))
-        self.socket.listen(20)
-
-        self.thread = threading.Thread(target=self.acceptGatewayConnections, name="GWAccept")
-        self.thread.daemon = True
-        self.thread.start()
-
-    def acceptGatewayConnections(self):
-        while True:
-            log.info("accept" + str(self.socket))
-            (clientsocket, address) = self.socket.accept()
-            log.info("%s:%s" % (clientsocket, address))
-            ##clientsocket.setblocking(0)
-            with self.lock:
-                ## first, prune dead gateways
-                for s in self.gateways.keys():
-                    g = self.gateways[s]
-                    if g.messenger is None:
-                        log.info("deleting disconnected gateway '%s'" % g.name)
-                        del self.gateways[s]
-                self.gateways[clientsocket] = Gateway(sock=clientsocket)
-            time.sleep(1)
-
-    ## either gets an incoming gateway message, or None if there is nothing to get
-    def getIncomingMessage(self):
-        with self.lock:
-            for g in self.gateways.values(): ## TODO: shuffle for fairness
-                if not g.inboundQueue.empty():
-                    return g.inboundQueue.get(), g
-        return None, None
-
-    def sendToOwner(self, m):
-        owner = m.owner
-        with self.lock:
-            for g in self.gateways.values():
-                if g.name == owner and g.messenger is not None:
-                    g.send(m)
 

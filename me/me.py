@@ -7,7 +7,7 @@ from order import Order
 from messages import *
 from book import Book
 from matchingbook import MatchingBook
-import gateway
+from gatewaycollection import GatewayCollection
 import feed
 import pnl
 import chessgame
@@ -59,8 +59,8 @@ if __name__ == "__main__":
 
     debugFeedBook = True
 
-    gateways = gateway.GatewayCollection()
-    f = feed.Feed()
+    gateways = GatewayCollection()
+    f = feed.Feed(send=True)
     b = MatchingBook()
     newMsg = game.newMessage()
     f.send(newMsg)

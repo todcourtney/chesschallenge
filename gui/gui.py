@@ -64,7 +64,7 @@ b = book.Book()
 prevSeq = None
 drops = 0
 
-f = feed.Feed(send=False, receive=True)
+f = feed.Feed()
 
 p = pnl.Pnl(sys.argv[1])
 

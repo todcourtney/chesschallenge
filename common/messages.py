@@ -2,11 +2,17 @@ import re
 from order import Order
 
 class ExchangeMessage:
+    """
+    Message from the exchange to convey public data about activity in the order book.
+    Specific types of exchange messages are subclasses below. The NewGame message is
+    important to the book because we need to clear any existing orders.
+    """
     def __init__(self, gameId, oid, qty, side, price):
         raise NotImplementedError("cannot instantiate ExchangeMessage base class")
 
     @classmethod
     def fromstr(cls, s):
+        """Convert from a string to the appropriate subclass of ExchangeMessage."""
         code, rest = s.split(",", 1)
         if   code ==     ExchangeNewGameMessage.code: return     ExchangeNewGameMessage.fromstr(s)
         elif code ==    ExchangeAddOrderMessage.code: return    ExchangeAddOrderMessage.fromstr(s)
@@ -30,6 +36,7 @@ class ExchangeNewGameMessage(ExchangeMessage):
         return "%s,%s" % (self.code, self.gameId)
 
 class ExchangeBookMessage(ExchangeMessage):
+    """Handle the (identical) work for Add, Cancel, and Trade messages. Subclasses just have own codes."""
     def __init__(self, gameId, oid, qty, side, price):
         assert hasattr(self,'code'), "you cannot instantiate ExchangeBookMessage directly"
         self.gameId = gameId
@@ -63,6 +70,10 @@ class ExchangeTradeMessage(ExchangeBookMessage):
 
 
 class ChessMessage:
+    """
+    Message from the exchange that pertains to the state of the chess game, including
+    when a new game starts, a move is made, or the result is announced.
+    """
     def __init__(self):
         raise NotImplementedError("cannot instantiate ChessMessage base class")
 
@@ -130,6 +141,11 @@ class ChessResultMessage(ChessMessage):
 
 
 class GatewayMessage:
+    """
+    Private traffic communnicated between a strategy and the exchange, including requests for
+    new orders (or cancels of old orders), as well as the private exchange acknowledgement of
+    an order, and the private fill information (non anonymized as in the public feed).
+    """
     def __init__(self):
         raise NotImplementedError("cannot instantiate GatewayMessage base class")
 
@@ -201,6 +217,7 @@ class LoginMessage(GatewayMessage):
         return "%s,%s" % (LoginMessage.code, self.name)
 
 class GatewayResponseMessage(GatewayMessage):
+    """Internal class used to save on the identical work needed for Add, Delete, and Trade messages. Use subclasses, not this class."""
     def __init__(self, owner, gameId, goid, oid, qty, side, price):
         assert hasattr(self,'code'), "you cannot instantiate GatewayResponseMessage directly"
         self.owner  = owner
@@ -235,6 +252,7 @@ class GatewayTradeMessage(GatewayResponseMessage):
     code = "GT"
 
 class GatewaySettleMessage(GatewayResponseMessage):
+    """Message indicating that a game has completed, and giving the price at which the contract settled."""
     code = "GX"
     def __init__(self, gameId, price):
         self.gameId = gameId
@@ -253,6 +271,7 @@ class GatewaySettleMessage(GatewayResponseMessage):
 class GatewayRejectMessage(GatewayResponseMessage):
     code = "GR"
     def __init__(self, owner, gameId, goid, reason=""):
+        assert "," not in reason
         self.owner  = owner
         self.gameId = gameId
         self.goid   = goid
