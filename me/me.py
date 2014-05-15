@@ -5,7 +5,8 @@ import Queue
 
 from order import Order
 from messages import *
-from book import MatchingBook, Book
+from book import Book
+from matchingbook import MatchingBook
 import gateway
 import feed
 import pnl
