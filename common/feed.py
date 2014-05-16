@@ -50,6 +50,8 @@ class Feed:
             self.receiveSocket.bind(('', Feed.MCAST_PORT))
             mreq = struct.pack("4sl", socket.inet_aton(Feed.MCAST_GRP), socket.INADDR_ANY)
             self.receiveSocket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
+            self.receiveSocket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 256*1024) ## see /proc/sys/net/core/rmem_*
+            ##print "receiveBuf = ", self.receiveSocket.getsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF)
 
             ## start the thread to handle any listeners through the callback mechanism
             if len(self.listeners):
