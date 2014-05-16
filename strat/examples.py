@@ -1,6 +1,7 @@
 import model
 import strat
 import time
+import math
 
 from order import Order
 from log import log
@@ -21,7 +22,7 @@ class SimpleChessMoveExecutor(strat.Strategy):
 
         ## decide my bid price and ask price
         fairPrice = self.model.fairPrice()
-        if fairPrice is None:
+        if fairPrice is None or math.isnan(fairPrice):
             ordersPending, ordersLive, ordersCanceling = self.gateway.orders()
             for o in ordersLive:
                 self.gateway.cancelOrder(m.gameId, o.oid)
