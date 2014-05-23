@@ -63,3 +63,9 @@ private:
   FeedPublisher (prev. Feed)
   ExchangeGateway (unless can overlap 100% with Gateway)
   GatewayCollection
+
+
+##      pnl owner          volume    pnl(win)   pnl(lose)
+##   257970 SCS            272860      257970      257970
+##   201090 SCO             68340      201090      201090
+##  -459060 SCM            299840     -459060     -459060
