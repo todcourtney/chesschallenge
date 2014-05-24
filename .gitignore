@@ -1,4 +1,5 @@
 *.pyc
 games/icofy
 data
-
+.obj
+swig
