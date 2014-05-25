@@ -17,6 +17,9 @@ $(shell echo "-- OUTPUT = $(SWIGOUTDIR)/$(SWIGLIB)" >&2)
 CXX = g++
 CXXFLAGS = -g -O0 -march=corei7 -Wall -I. -Icommon -fPIC
 
+INCPYTHON = $(shell dirname `locate Python.h`)
+$(shell echo "-- INCPYTHON = $(INCPYTHON)" >&2)
+
 .PHONY: clean all
 all: $(OBJLIST) $(SWIGLIB)
 
@@ -36,7 +39,7 @@ $(SWIGSOURCES): $(SWIGFILES) $(OBJDIR)/dummy
 	swig -c++ -python -outdir $(SWIGOUTDIR) -o $@ $<
 
 $(SWIGOBJDIR)/%.o: $(SWIGSOURCES) $(OBJDIR)/dummy
-	$(CXX) -c $(CXXFLAGS) -I/usr/include/python2.6 -o $@ $<
+	$(CXX) -c $(CXXFLAGS) -I$(INCPYTHON) -o $@ $<
 
 clean:
 	rm -rf $(OBJDIR)
