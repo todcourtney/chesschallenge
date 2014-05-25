@@ -2,6 +2,7 @@
 #define __CMESSAGE_H__
 
 #include <COrder.h>
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -51,6 +52,7 @@ private:
   unsigned gameid_;
   std::string move_;
   std::vector<std::string> history_;
+  std::string result_;
 
 public:
   // Methods for python controller.
@@ -59,7 +61,8 @@ public:
     const std::string& type,
     unsigned gid,
     const std::string& move,
-    const std::vector<std::string>& history);
+    const std::vector<std::string>& history,
+    const std::string& result);
 };
 
 #endif

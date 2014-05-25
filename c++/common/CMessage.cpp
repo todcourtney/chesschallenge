@@ -55,10 +55,12 @@ ChessMessage::ChessMessage(
   const std::string& type,
   unsigned gid,
   const std::string& move,
-  const std::vector<std::string>& history)
+  const std::vector<std::string>& history,
+  const std::string& result)
   : gameid_(gid)
   , move_(move)
   , history_(history)
+  , result_(result)
 {
   if      (type == "CN") type_ = CHESS_NEW_GAME;
   else if (type == "CM") type_ = CHESS_MOVE;

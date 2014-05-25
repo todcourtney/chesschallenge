@@ -19,6 +19,8 @@ public:
   unsigned bidOrders(unsigned i) const;
   unsigned askOrders(unsigned i) const;
 
+  static const unsigned MAX_LEVELS = 5;
+
 private:
   struct Level
   {
@@ -29,8 +31,8 @@ private:
 
   unsigned bidLevels_;
   unsigned askLevels_;
-  Level bids_[5];
-  Level asks_[5];
+  Level bids_[MAX_LEVELS];
+  Level asks_[MAX_LEVELS];
 
 public:
   CBook();

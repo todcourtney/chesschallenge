@@ -26,7 +26,7 @@ $(OBJDIR)/%.o: %.cpp $(OBJDIR)/dummy
 	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
 $(SWIGLIB): $(SWIGOBJLIST) $(OBJLIST)
-	$(CXX) -shared -lpython -dynamiclib -o $(SWIGOUTDIR)/$@ $(SWIGOBJLIST) $(OBJLIST)
+	$(CXX) -shared -o $(SWIGOUTDIR)/$@ $(SWIGOBJLIST) $(OBJLIST)
 	rm -f *_swig.cxx
 
 $(SWIGOBJLIST): $(SWIGSOURCES)
@@ -36,7 +36,7 @@ $(SWIGSOURCES): $(SWIGFILES) $(OBJDIR)/dummy
 	swig -c++ -python -outdir $(SWIGOUTDIR) -o $@ $<
 
 $(SWIGOBJDIR)/%.o: $(SWIGSOURCES) $(OBJDIR)/dummy
-	$(CXX) -c $(CXXFLAGS) -I/usr/include/python2.7 -o $@ $<
+	$(CXX) -c $(CXXFLAGS) -I/usr/include/python2.6 -o $@ $<
 
 clean:
 	rm -rf $(OBJDIR)
