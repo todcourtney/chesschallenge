@@ -43,13 +43,13 @@ public:
     CHESS_RESULT };
 
   Type type() const;
-  unsigned gameid() const;
+  const std::string& gameid() const;
   const std::string& move() const;
   const std::vector<std::string>& history() const;
 
 private:
   Type type_;
-  unsigned gameid_;
+  std::string gameid_;
   std::string move_;
   std::vector<std::string> history_;
   std::string result_;
@@ -59,7 +59,7 @@ public:
   ChessMessage();
   ChessMessage(
     const std::string& type,
-    unsigned gid,
+    const std::string& gid,
     const std::string& move,
     const std::vector<std::string>& history,
     const std::string& result);

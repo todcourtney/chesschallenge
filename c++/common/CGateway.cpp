@@ -20,12 +20,12 @@ const std::vector<COrder>& CGateway::ordersCanceling() const
   return ordersCanceling_;
 }
 
-void CGateway::addOrder(unsigned gameid, unsigned price, unsigned quantity, int side)
+void CGateway::addOrder(const std::string& gameid, unsigned price, unsigned quantity, int side)
 {
   outboundAdds_.push_back(COrder(gameid, 0, price, quantity, side));
 }
 
-void CGateway::cancelOrder(unsigned gameid, unsigned orderid)
+void CGateway::cancelOrder(const std::string& gameid, unsigned orderid)
 {
   outboundCancels_.push_back(COrder(gameid, orderid, 0, 0, 0));
 }

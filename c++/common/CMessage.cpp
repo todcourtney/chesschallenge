@@ -30,7 +30,7 @@ ChessMessage::Type ChessMessage::type() const
   return type_;
 }
 
-unsigned ChessMessage::gameid() const
+const std::string& ChessMessage::gameid() const
 {
   return gameid_;
 }
@@ -48,12 +48,12 @@ const std::vector<std::string>& ChessMessage::history() const
 ChessMessage::ChessMessage()
 {
   type_ = CHESS_UNKNOWN;
-  gameid_ = 0;
+  gameid_ = std::string();
 }
 
 ChessMessage::ChessMessage(
   const std::string& type,
-  unsigned gid,
+  const std::string& gid,
   const std::string& move,
   const std::vector<std::string>& history,
   const std::string& result)

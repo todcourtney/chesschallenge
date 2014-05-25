@@ -16,8 +16,8 @@ public:
   const std::vector<COrder>& ordersCanceling() const;
 
   // Methods to add and cancel orders.
-  void addOrder(unsigned gameid, unsigned price, unsigned quantity, int side);
-  void cancelOrder(unsigned gameid, unsigned orderid);
+  void addOrder(const std::string& gameid, unsigned price, unsigned quantity, int side);
+  void cancelOrder(const std::string& gameid, unsigned orderid);
 
 private:
   int position_;

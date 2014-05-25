@@ -40,8 +40,8 @@ class CStrategyWrapper(strat.Strategy):
   def makeOrderVector(self, orders):
     ovec = vector_o()
     for o in orders:
-      gameid = o.gameId if o.gameId else 0
-      corder = COrder(int(gameid), int(o.oid), int(o.price), int(o.qty), int(o.side))
+      gameid = o.gameId if o.gameId else ""
+      corder = COrder(gameid, int(o.oid), int(o.price), int(o.qty), int(o.side))
       ovec.push_back(corder)
     return ovec
 
@@ -79,8 +79,9 @@ class CStrategyWrapper(strat.Strategy):
       return
 
     chess = ChessBoard()
-    for move in m.history:
-      chess.addTextMove(move)
+    if isinstance(m, ChessMoveMessage):
+      for move in m.history:
+        chess.addTextMove(move)
 
     board = chess.getBoard()
     cboard = self.strategy.board()
@@ -91,21 +92,21 @@ class CStrategyWrapper(strat.Strategy):
 
   def makeChessMessage(self, m):
     if isinstance(m, ChessNewGameMessage):
-      cm = ChessMessage(m.code, int(m.gameId), "", vector_s(), "")
+      cm = ChessMessage(m.code, m.gameId, "", vector_s(), "")
     elif isinstance(m, ChessMoveMessage):
       history = vector_s()
       for h in m.history:
         history.push_back(h)
-      cm = ChessMessage(m.code, int(m.gameId), m.move, history, "")
+      cm = ChessMessage(m.code, m.gameId, m.move, history, "")
     elif isinstance(m, ChessResultMessage):
-      cm = ChessMessage(m.code, int(m.gameId), "", vector_s(), m.result)
+      cm = ChessMessage(m.code, m.gameId, "", vector_s(), m.result)
     return cm
 
   def makeExchangeMessage(self, m):
     if isinstance(m, ExchangeBookMessage):
-      order = COrder(int(m.gameId), int(m.oid), int(m.price), int(m.qty), int(m.side()))
+      order = COrder(m.gameId, int(m.oid), int(m.price), int(m.qty), int(m.side()))
     else:
-      order = COrder(int(m.gameId), 0, 0, 0, COrder.BUY);
+      order = COrder(m.gameId, 0, 0, 0, COrder.BUY);
     em = ExchangeMessage(m.code, order)
     return em
 

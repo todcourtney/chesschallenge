@@ -1,6 +1,6 @@
 #include <COrder.h>
 
-unsigned COrder::gameid() const
+std::string COrder::gameid() const
 {
   return gameid_;
 }
@@ -27,14 +27,14 @@ int COrder::side() const
 
 COrder::COrder()
 {
-  gameid_ = 0;
+  gameid_ = std::string();
   orderid_ = 0;
   price_ = 0;
   quantity_ = 0;
   side_ = BUY;
 }
 
-COrder::COrder(unsigned gid, unsigned oid, unsigned price, unsigned qty, int side)
+COrder::COrder(const std::string& gid, unsigned oid, unsigned price, unsigned qty, int side)
 {
   gameid_ = gid;
   orderid_ = oid;
