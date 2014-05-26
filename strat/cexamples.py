@@ -5,6 +5,7 @@ import sys
 
 import model
 import strat
+import stockfish
 import time
 import math
 
@@ -20,10 +21,12 @@ class CStrategyWrapper(strat.Strategy):
   def __init__(self, name, cname):
     super(CStrategyWrapper, self).__init__(name)
     self.strategy = CFactory.makeStrategy(cname)
+    self.stockfish = stockfish.Stockfish()
 
   def onChessMessage(self,m):
     self.syncGateway()
     self.syncBoard(m)
+    self.syncStockfish(m)
     cm = self.makeChessMessage(m)
     self.strategy.onChessMessage(cm)
     self.commitOrders()
@@ -75,7 +78,7 @@ class CStrategyWrapper(strat.Strategy):
         cbook.setAsk(i, askLevel.price, qty, numo)
 
   def syncBoard(self, m):
-    if isinstance(m, ChessResultMessage):
+    if not isinstance(m, ChessMoveMessage):
       return
 
     chess = ChessBoard()
@@ -89,6 +92,29 @@ class CStrategyWrapper(strat.Strategy):
     for row,rank in enumerate(board):
       for col,square in enumerate(rank):
         cboard.setPiece(row, col, square)
+
+  def syncStockfish(self, m):
+    if not isinstance(m, ChessMoveMessage) or not self.stockfish:
+      return
+
+    chess = ChessBoard()
+    algebraicNotationMoves = []
+    for move in m.history:
+      chess.addTextMove(move)
+      algebraicNotationMoves.append(chess.getLastTextMove(ChessBoard.AN))
+
+    fen, legalMoves, scores, pctM, pctE1, pctE2, total = self.stockfish.eval(algebraicNotationMoves)
+
+    sf = self.strategy.stockfish()
+    sf.reset()
+    sf.setFEN(fen)
+    sf.setLegalMoves(legalMoves)
+    sf.setTotal(pctM, pctE1, pctE2, total)
+
+    for scoreType, scoreList in scores.iteritems():
+      for scoreSubtype, score in scoreList.iteritems():
+        if not math.isnan(score):
+          sf.setScore(scoreType, scoreSubtype, score)
 
   def makeChessMessage(self, m):
     if isinstance(m, ChessNewGameMessage):

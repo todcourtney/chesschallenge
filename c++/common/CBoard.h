@@ -24,7 +24,7 @@ private:
   char board_[CHESS_BOARD_DIM][CHESS_BOARD_DIM];
 
 public:
-  // TODO
+  // Accessors for python controller.
   CBoard();
   void setPiece(unsigned row, unsigned col, char piece);
 };

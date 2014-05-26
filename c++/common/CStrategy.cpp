@@ -15,6 +15,11 @@ const CBoard& CStrategy::board() const
   return board_;
 }
 
+const CStockfish& CStrategy::stockfish() const
+{
+  return stockfish_;
+}
+
 CGateway& CStrategy::gateway()
 {
   return gateway_;
@@ -29,3 +34,9 @@ CBoard& CStrategy::board()
 {
   return board_;
 }
+
+CStockfish& CStrategy::stockfish()
+{
+  return stockfish_;
+}
+

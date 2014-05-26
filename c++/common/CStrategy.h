@@ -5,6 +5,7 @@
 #include <CGateway.h>
 #include <CBook.h>
 #include <CBoard.h>
+#include <CStockfish.h>
 
 class CStrategy
 {
@@ -18,13 +19,13 @@ public:
   const CGateway& gateway() const;
   const CBook& book() const;
   const CBoard& board() const;
+  const CStockfish& stockfish() const;
 
 private:
   CGateway gateway_;
   CBook book_;
   CBoard board_;
-  // TODO: board
-  // TODO: stockfish
+  CStockfish stockfish_;
 
 public:
   // Accessors for python controller.
@@ -32,6 +33,7 @@ public:
   virtual ~CStrategy() {}
   CBook& book();
   CBoard& board();
+  CStockfish& stockfish();
 };
 
 #endif
