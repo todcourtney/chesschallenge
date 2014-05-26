@@ -155,9 +155,10 @@ class MeTooMarketMaker(strat.Strategy):
 
 if __name__ == "__main__":
     import sys
-    if "SCO" in sys.argv: x = SimpleChessMoveExecutor("SCO", OpeningChessModel("OpeningChessModel"))
-    if "SCM" in sys.argv: y = SimpleChessMoveExecutor("SCM", SimpleMaterialCountChessModel("SimpleMaterialCountChessModel"))
-    if "SCS" in sys.argv: z = SimpleChessMoveExecutor("SCS", StockfishChessModel("StockfishChessModel"))
+    if "SCO"  in sys.argv: SCO  = SimpleChessMoveExecutor("SCO", OpeningChessModel("OpeningChessModel"))
+    if "SCM"  in sys.argv: SCM  = SimpleChessMoveExecutor("SCM", SimpleMaterialCountChessModel("SimpleMaterialCountChessModel"))
+    if "SCS"  in sys.argv: SCS  = SimpleChessMoveExecutor("SCS", StockfishChessModel("StockfishChessModel"))
+    if "SIMM" in sys.argv: SIMM = SimpleInventoryMarketMaker("SIMM")
     ##x = SimpleInventoryMarketMaker("SIMM")
     while True:
         time.sleep(1)
