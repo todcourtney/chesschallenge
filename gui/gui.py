@@ -89,6 +89,7 @@ try:
     stdscr.refresh()
 
     move = ""
+    oldCenter = None
     while True:
         msg, seq, drop, m = f.recv()
         messages.append(msg)
@@ -111,6 +112,7 @@ try:
                 header, gameId = m.split(",")
             b = book.Book()
             chessResult = ""
+            oldCenter = None
         elif m.startswith("CM"):
             header, gameId, move, history = m.split(",")
             chess = ChessBoard()
@@ -134,10 +136,17 @@ try:
         else:
             center = int((bid+ask)/2.0)
 
+        ## if center has not drifted too far from old center, keep old center
+        if oldCenter is not None and abs(center - oldCenter) < 5:
+            center = oldCenter
+        else:
+            ## if we are going to update, then keep track of old
+            oldCenter = center
+
         ladderPad.addstr(0,0,str(b))
 
         #  Displays a section of the pad in the middle of the screen
-        H = 20
+        H = 30
         ladderPad.refresh(100-center-H/2,0, 5,5+5+25, 5+H,5+5+25+70)
 
         boardPad.addstr(0,3,"%-10s"%chessResult)
