@@ -46,15 +46,11 @@ class SimpleChessMoveExecutor(strat.Strategy):
             if o.side == Order.BUY:
                 if o.price == buyPrice:
                     alreadyHaveBuy = True
-                    if o.qty < desiredQty:
-                        self.gateway.addOrder(m.gameId, desiredQty-o.qty, Order.BUY, buyPrice)
                 elif True or o.price > buyPrice:
                     self.gateway.cancelOrder(m.gameId, o.oid)
             else:
                 if o.price == sellPrice:
                     alreadyHaveSell = True
-                    if o.qty < desiredQty:
-                        self.gateway.addOrder(m.gameId, desiredQty-o.qty, Order.SELL, sellPrice)
                 elif True or o.price < sellPrice:
                     self.gateway.cancelOrder(m.gameId, o.oid)
 
