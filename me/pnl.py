@@ -35,13 +35,18 @@ class PnlEvents:
         return str(self.events)
 
 class Pnl:
-    def __init__(self, filename):
+    def __init__(self, filename, thread=True):
         self.events = []
         self.lock = threading.Lock()
         self.filename = filename
-        self.thread = threading.Thread(target=self.keepEventsUpToDate, name="PNL")
-        self.thread.daemon = True
-        self.thread.start()
+
+        if thread:
+            self.thread = threading.Thread(target=self.keepEventsUpToDate, name="PNL")
+            self.thread.daemon = True
+            self.thread.start()
+        else:
+            with open(self.filename, 'r') as f:
+                self.events = [tuple(line.rstrip().split(",")) for line in f]
 
     def keepEventsUpToDate(self):
         f = None
@@ -120,20 +125,31 @@ def leaderboardFromSummary(pnls):
         pnlStr             = locale.format("%10d", pnl            , grouping=True)
         pnlIfWhiteWinsStr  = locale.format("%10d", pnlIfWhiteWins , grouping=True)
         pnlIfWhiteLosesStr = locale.format("%10d", pnlIfWhiteLoses, grouping=True)
-        lines.append((pnl, "%(pnlStr)11s %(o)-10s %(vol)10d %(pnlIfWhiteWinsStr)11s %(pnlIfWhiteLosesStr)11s " % locals()))
-    header = "%11s %-10s %10s %11s %11s" % ("pnl", "owner", "volume", "pnl(win)", "pnl(lose)")
+        lines.append((pnl, "%(pnlStr)11s %(o)-10s %(pos)4d %(vol)10d %(pnlIfWhiteWinsStr)11s %(pnlIfWhiteLosesStr)11s " % locals()))
+    header = "%11s %-10s %4s %10s %11s %11s" % ("pnl", "owner", "pos", "volume", "pnl(win)", "pnl(lose)")
     lines = sorted(lines, key = lambda x: -x[0])
     return "\n".join([header] + [l[1] for l in lines])
 
 ## for testing
 if __name__ == "__main__":
-    p = Pnl("pnl.csv")
-    while True:
-        time.sleep(2)
-        z = p.getPnl()
-        for k,v in z.iteritems():
-            log.info(k)
-            for r in v:
-                log.info("  " + r)
+    import sys, os
+    import matplotlib.pyplot as plt
+    loop = False
 
-        log.info(leaderboardFromSummary(z))
+    p = Pnl(sys.argv[1], thread=loop)
+
+    while True:
+        if loop: time.sleep(2)
+        z = p.getPnl()
+        for k in sorted(z.keys()):
+            v = z[k]
+            times = [r[1] for r in v]
+            pnls  = [r[3] for r in v]
+            plt.plot(times, pnls, label=k) ## "%8.8s $%8d %6d" % (k, v[-1][3], v[-1][2])
+        plt.legend(loc="upper left") #, prop={'family': 'monospace'})
+        plt.savefig("tmp.png")
+        os.rename("tmp.png", "pnl.png")
+        if loop: plt.clf()
+
+        print leaderboardFromSummary(z)
+        if not loop: break
