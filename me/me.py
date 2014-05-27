@@ -122,6 +122,24 @@ if __name__ == "__main__":
             time.sleep(0.1)
             continue
 
+        events = []
+        gatewayEvents = []
+
+        ## cancel all orders for disconnected gateways
+        for G in gateways.gateways.values():
+            if G.messenger is None:
+                log.info("canceling all orders for disconnected gateway %s" % G.name)
+                for L in b.bids + b.asks:
+                    for o in L.orders:
+                        if o.owner == G.name:
+                            newEvents, newGatewayEvents = b.cancelOrder(o.oid,owner=G.name)
+                            events.extend(newEvents)
+
+        ## skip new messages from disconnected
+        if g.messenger is None:
+            log.warning("skip message from disconnected gateway %s: '%s'" % (g.name, m))
+            continue
+
         log.info("MatchingEngine got message from %s: '%s'" % (g.name, m))
 
         ## settings for checks
@@ -170,8 +188,7 @@ if __name__ == "__main__":
             log.warning("MatchingEngine dropping message not for this game (%s) from %s: '%s'" % (game.gameId, g.name, m))
             continue
 
-        events = []
-        gatewayEvents = []
+        ## do actual matching logic
         if isinstance(m, GatewaySubmitOrderMessage):
             o = Order(newoid,m.qty,m.side,m.price,owner=g.name,gameId=m.gameId,goid=m.goid)
             newoid += 1

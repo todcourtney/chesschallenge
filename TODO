@@ -2,7 +2,6 @@ fix gui bug where sells are sometimes not displayed (maybe is recovery race cond
 finish reorganize public vs private
 gateway:
   cancel all orders on disconnect
-  gateway/me enforced risk: max pos, max order size, max orders, valid price, max order rate
   pnl (need marks, probably best to use Book)
 simple strategies
 training
