@@ -47,14 +47,14 @@ class SimpleChessMoveExecutor(strat.Strategy):
                 if o.price == buyPrice:
                     alreadyHaveBuy = True
                     if o.qty < desiredQty:
-                        self.addOrder(m.gameId, desiredQty-o.qty, Order.BUY, buyPrice)
+                        self.gateway.addOrder(m.gameId, desiredQty-o.qty, Order.BUY, buyPrice)
                 elif True or o.price > buyPrice:
                     self.gateway.cancelOrder(m.gameId, o.oid)
             else:
                 if o.price == sellPrice:
                     alreadyHaveSell = True
                     if o.qty < desiredQty:
-                        self.addOrder(m.gameId, desiredQty-o.qty, Order.SELL, sellPrice)
+                        self.gateway.addOrder(m.gameId, desiredQty-o.qty, Order.SELL, sellPrice)
                 elif True or o.price < sellPrice:
                     self.gateway.cancelOrder(m.gameId, o.oid)
 
@@ -149,9 +149,57 @@ class SimpleInventoryMarketMaker(strat.Strategy):
             self.gateway.addOrder(self.gameId, self.addQty, Order.SELL, price=askPrice)
 
 class MeTooMarketMaker(strat.Strategy):
-    def onBookUpdateMessage(self, bookUpdateMessage):
-        ## parse out whether it's a buy or sell, and the price, and just do it too if it's not already me
-        pass
+    def __init__(self, name):
+        super(MeTooMarketMaker, self).__init__(name)
+
+        self.maxPos = 10
+        self.addQty = 1
+        self.cooldown = 5
+
+    def onExchangeMessage(self, exchangeMessage):
+        log.info("onExchangeMessage('%s')" % exchangeMessage)
+        ## apply to book
+        self.book.processMessage(exchangeMessage)
+
+        if hasattr(exchangeMessage, "gameId") and exchangeMessage.gameId is not None:
+            self.gameId = exchangeMessage.gameId
+
+        if self.book.needRecovery or self.gameId is None: return
+
+        ## cooldown
+        if not hasattr(self, "nextTime"): self.nextTime = time.time() + self.cooldown
+        if time.time() > self.nextTime:
+            self.nextTime = time.time() + self.cooldown
+        else:
+            return
+
+        bid = self.book.bid()
+        ask = self.book.ask()
+
+        qtyLong  =     max(self.gateway.pos,0)
+        qtyShort = abs(min(self.gateway.pos,0))
+
+        log.info("ask = %(ask)4s qtyShort = %(qtyShort)3d" % locals())
+        log.info("bid = %(bid)4s qtyLong  = %(qtyLong)3d"  % locals())
+
+        ## check existing orders that haven't been canceled
+        haveOrderAtBid, haveOrderAtAsk = False, False
+        ordersPending, ordersLive, ordersCanceling = self.gateway.orders()
+        for o in ordersLive:
+            cancel = False
+            if   bid is not None and o.side == "B" and o.price == bid: haveOrderAtBid = True
+            elif ask is not None and o.side == "S" and o.price == ask: haveOrderAtAsk = True
+            else:
+                cancel = True
+                self.gateway.cancelOrder(self.gameId, o.oid)
+
+            log.info("oid=%d qty=%d side=%d price=%d cancel=%d" % (o.oid, o.qty, o.side, o.price, cancel))
+
+        ## place new orders
+        if qtyLong  + self.addQty <= self.maxPos and not haveOrderAtBid and bid is not None:
+            self.gateway.addOrder(self.gameId, self.addQty, Order.BUY, price=bid)
+        if qtyShort + self.addQty <= self.maxPos and not haveOrderAtAsk and ask is not None:
+            self.gateway.addOrder(self.gameId, self.addQty, Order.SELL, price=ask)
 
 if __name__ == "__main__":
     import sys
@@ -159,7 +207,7 @@ if __name__ == "__main__":
     if "SCM"  in sys.argv: SCM  = SimpleChessMoveExecutor("SCM", SimpleMaterialCountChessModel("SimpleMaterialCountChessModel"))
     if "SCS"  in sys.argv: SCS  = SimpleChessMoveExecutor("SCS", StockfishChessModel("StockfishChessModel"))
     if "SIMM" in sys.argv: SIMM = SimpleInventoryMarketMaker("SIMM")
-    ##x = SimpleInventoryMarketMaker("SIMM")
+    if "M2M"  in sys.argv: M2M  = MeTooMarketMaker("M2M")
     while True:
         time.sleep(1)
         pass
