@@ -124,6 +124,12 @@ if __name__ == "__main__":
 
         log.info("MatchingEngine got message from %s: '%s'" % (g.name, m))
 
+        ## settings for checks
+        MAX_POTENTIAL_POS   = 100
+        MAX_TOTAL_ORDER_QTY = 100
+        MAX_TOTAL_ORDER_NUM = 10
+        MAX_ORDER_QTY       = 100
+
         ## check gameid, position, order qty, and num orders
         if isinstance(m, GatewaySubmitOrderMessage):
             reason = None
@@ -131,18 +137,30 @@ if __name__ == "__main__":
                 reason="BAD_GAME_ID"
             elif m.price < 0 or m.price > 100:
                 reason="BAD_PRICE"
-            elif m.qty < 1 or m.qty > 100:
+            elif m.qty < 1 or m.qty > MAX_ORDER_QTY:
                 reason="BAD_QTY"
             else:
                 bids = [o for L in b.bids for o in L.orders if o.owner == g.name]
                 asks = [o for L in b.asks for o in L.orders if o.owner == g.name]
                 totalOrders = len(bids+asks)
                 totalQty    = sum(o.qty for o in bids+asks)
-                log.info("owner = %s, totalOrders = %d, totalQty = %d" % (g.name, totalOrders, totalQty))
-                if totalOrders + 1 > 10:
+                pos = b.pos.get(g.name, 0)
+                posL =  pos if pos > 0 else 0
+                posS = -pos if pos < 0 else 0
+                potL = posL + sum(o.qty for o in bids)
+                potS = posS + sum(o.qty for o in asks)
+
+                if totalOrders + 1 > MAX_TOTAL_ORDER_NUM:
                     reason="TOO_MANY_ORD"
-                elif totalQty + m.qty > 200:
+                elif totalQty + m.qty > MAX_TOTAL_ORDER_QTY:
                     reason="BAD_TOT_QTY"
+                elif m.side == Order.BUY  and potL + m.qty > MAX_POTENTIAL_POS:
+                    reason="TOO_LONG"
+                elif m.side == Order.SELL and potS + m.qty > MAX_POTENTIAL_POS:
+                    reason="TOO_SHORT"
+
+                log.info("owner = %s, totalOrders = %d, totalQty = %d, pos = %d, posL/potL = %d/%d, posS/potS = %d/%d" % (g.name, totalOrders, totalQty, pos, posL, potL, posS, potS))
+
             if reason is not None:
                 g.send(GatewayRejectMessage(g.name, m.gameId, m.goid, reason=reason))
                 continue

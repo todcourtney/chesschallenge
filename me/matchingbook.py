@@ -18,6 +18,9 @@ class MatchingBook:
         ## to speed up cancels
         self.oidToPriceLevel = dict()
 
+        ## positions to enforce maxpos checks
+        self.pos = dict()
+
     def bidLevel(self, level=0):
         n = -1
         for i in reversed(xrange(self.N)):
@@ -75,6 +78,8 @@ class MatchingBook:
                     gatewayEvents.append( GatewayTradeMessage( o.owner,  o.gameId,  o.goid,  o.oid, ro.qty,  o.side, ro.price))
                     pnlTrades.append(("T", ro.gameId, tm, ro.owner, ro.oid, ro.qty, ro.side, ro.price))
                     pnlTrades.append(("T",  o.gameId, tm,  o.owner,  o.oid, ro.qty,  o.side, ro.price))
+                    self.pos[ro.owner] = self.pos.get(ro.owner, 0) + (ro.qty*ro.side)
+                    self.pos[ o.owner] = self.pos.get( o.owner, 0) + (ro.qty* o.side)
                     o.qty  -= ro.qty
                     ro.qty  = 0
                     del l.orders[0]
@@ -84,6 +89,8 @@ class MatchingBook:
                     gatewayEvents.append( GatewayTradeMessage( o.owner,  o.gameId,  o.goid,  o.oid,  o.qty,  o.side, ro.price))
                     pnlTrades.append(("T", ro.gameId, tm, ro.owner, ro.oid,  o.qty, ro.side, ro.price))
                     pnlTrades.append(("T",  o.gameId, tm,  o.owner,  o.oid,  o.qty,  o.side, ro.price))
+                    self.pos[ro.owner] = self.pos.get(ro.owner, 0) + ( o.qty*ro.side)
+                    self.pos[ o.owner] = self.pos.get( o.owner, 0) + ( o.qty* o.side)
                     ro.qty -= o.qty
                     o.qty   = 0
             else:
