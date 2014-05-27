@@ -117,3 +117,31 @@ a$openingWinPct <- winPct[match(a$history, names(winPct))]
 
 
 a <- do.call("rbind", lapply(Sys.glob("~/chesschallenge/data/*.csv"), function(f) {cat(f, "\n"); read.csv(f, nrows=300000)}))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## off of one-line-games files
+a <- read.csv("~/chesschallenge/data/onelinegames/a.csv", nrows=100000, header=FALSE, col.names=c("src", "line", "result", "moves"), as.is=TRUE)
+history <- strsplit(a$moves, split=" ", fixed=TRUE)
+allWinPct <- NULL;
+for(N in 1:10) {
+    cat(N, "\n");
+    opening <- sapply(history, function(x) {paste(x[1:N], collapse=" ")});
+    z <- rev(sort(table(opening)));
+    d <- data.frame(n=N, opening=names(z), nobs=z, winPct=tapply(a$result=="1-0", opening, mean)[names(z)]);
+    d <- subset(d, nobs > 100);
+    if(nrow(d) == 0) break;
+    allWinPct <- rbind(allWinPct, d);
+}

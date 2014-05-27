@@ -1,15 +1,17 @@
+fix gui bug where sells are sometimes not displayed (maybe is recovery race condition?)
 finish reorganize public vs private
 gateway:
+  cancel all orders on disconnect
   gateway/me enforced risk: max pos, max order size, max orders, valid price, max order rate
   pnl (need marks, probably best to use Book)
 simple strategies
 training
+sim
+message parsers ignore bad formats (only for client-generated messages)
 
 matching engine recovery
-chess game variety in me
 split seq nums for game vs. market data?
 fetchdata?
-message parsers ignore bad formats (only for client-generated messages)
 handle gateway disconnects gracefully (pull orders, leave pos so can quickly bounce if their code is good, will expire at EOG)
 click trader?
 ioc orders?
