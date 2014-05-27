@@ -88,6 +88,7 @@ try:
     stdscr.addstr("Chess Trading GUI")
     stdscr.refresh()
 
+    move = ""
     while True:
         msg, seq, drop, m = f.recv()
         messages.append(msg)
