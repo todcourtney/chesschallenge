@@ -1,7 +1,5 @@
 import sys
-#sys.path.insert(0, "../common")
-#sys.path.insert(0, "../ChessBoard")
-#sys.path.insert(0, "../c++/swig/")
+import getopt
 
 import model
 import strat
@@ -145,8 +143,42 @@ class CStrategyWrapper(strat.Strategy):
     for o in cancelOrderVec:
       self.gateway.cancelOrder(o.gameid(), o.orderid())
 
+def exitWithUsage():
+  print >>sys.stderr
+  print >>sys.stderr, '  usage:'
+  print >>sys.stderr, '    %s --strategy <strategy_name> --id <strategy_id>' % sys.argv[0]
+  print >>sys.stderr
+  print >>sys.stderr, '      -s/--strategy <strategy_name>    name of C++ strategy class'
+  print >>sys.stderr, '      -i/--id <strategy_id>            short string id for strategy'
+  print >>sys.stderr, '      -h/--help                        print this useful message'
+  print >>sys.stderr
+  sys.exit(0)
+
 if __name__ == "__main__":
-  x = CStrategyWrapper("CSW", "MaterialCountStrategy")
+  try:
+    opts, args = getopt.getopt(sys.argv[1:], 's:i:h', ['strategy=', 'id=', 'help'])
+  except getopt.GetoptError, err:
+    print >>sys.stderr, err
+    exitWithUsage()
+
+  strategyName = None
+  strategyId = None
+
+  for o,a in opts:
+    if o == '-s' or o == '--strategy':
+      strategyName = a
+    elif o == '-i' or o == '--id':
+      strategyId = a
+    elif o == '-h' or o == '--help':
+      exitWithUsage()
+
+  if not strategyName or not strategyId:
+    print >>sys.stderr, "Must specify both strategy and id"
+    exitWithUsage()
+
+  x = CStrategyWrapper(strategyId, strategyName)
+
   while True:
     time.sleep(1)
     pass
+
