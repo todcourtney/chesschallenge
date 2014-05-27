@@ -197,6 +197,34 @@ class MeTooMarketMaker(strat.Strategy):
         if qtyShort + self.addQty <= self.maxPos and not haveOrderAtAsk and ask is not None:
             self.gateway.addOrder(self.gameId, self.addQty, Order.SELL, price=ask)
 
+class BrokenMarketMaker(strat.Strategy):
+    def __init__(self, name):
+        super(BrokenMarketMaker, self).__init__(name)
+
+        self.maxPos = 10
+        self.addQty = 1
+
+    def onExchangeMessage(self, exchangeMessage):
+        log.info("onExchangeMessage('%s')" % exchangeMessage)
+        ## apply to book
+        self.book.processMessage(exchangeMessage)
+
+        if hasattr(exchangeMessage, "gameId") and exchangeMessage.gameId is not None:
+            self.gameId = exchangeMessage.gameId
+
+        if self.book.needRecovery or self.gameId is None: return
+
+        bid = self.book.bid()
+        ask = self.book.ask()
+
+        ordersPending, ordersLive, ordersCanceling = self.gateway.orders()
+        for o in ordersLive:
+            self.gateway.cancelOrder(self.gameId, o.oid)
+
+        for i in xrange(30):
+            if bid is not None: self.gateway.addOrder(self.gameId, self.addQty, Order.BUY , price=bid)
+            if ask is not None: self.gateway.addOrder(self.gameId, self.addQty, Order.SELL, price=ask)
+
 if __name__ == "__main__":
     import sys
     if "SCO"  in sys.argv: SCO  = SimpleChessMoveExecutor("SCO", OpeningChessModel("OpeningChessModel"))
@@ -204,6 +232,7 @@ if __name__ == "__main__":
     if "SCS"  in sys.argv: SCS  = SimpleChessMoveExecutor("SCS", StockfishChessModel("StockfishChessModel"))
     if "SIMM" in sys.argv: SIMM = SimpleInventoryMarketMaker("SIMM")
     if "M2M"  in sys.argv: M2M  = MeTooMarketMaker("M2M")
+    if "BMM"  in sys.argv: BMM  = BrokenMarketMaker("BMM")
     while True:
         time.sleep(1)
         pass
