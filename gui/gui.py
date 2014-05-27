@@ -3,7 +3,7 @@ import time
 import random
 import sys
 
-import book, feed, pnl
+import book, feed ##, pnl
 from ChessBoard import ChessBoard
 
 import logging
@@ -66,7 +66,7 @@ drops = 0
 
 f = feed.Feed()
 
-p = pnl.Pnl(sys.argv[1])
+##p = pnl.Pnl(sys.argv[1])
 
 stdscr = curses.initscr()
 
@@ -83,7 +83,7 @@ try:
     ladderPad = curses.newpad(105, 70)
     boardPad  = curses.newpad(15, 25)
     logPad    = curses.newpad(20, 52)
-    pnlPad    = curses.newpad(20, 72)
+    ##pnlPad    = curses.newpad(20, 72)
 
     stdscr.addstr("Chess Trading GUI")
     stdscr.refresh()
@@ -101,8 +101,8 @@ try:
         messages = messages[-20:] ## discard old
         logPad.refresh(0,0, 40,0, 60,52)
 
-        pnlPad.addstr(0,0, pnl.leaderboardFromSummary(p.getPnl()))
-        pnlPad.refresh(0,0, 40,55, 60,55+72)
+        ##pnlPad.addstr(0,0, pnl.leaderboardFromSummary(p.getPnl()))
+        ##pnlPad.refresh(0,0, 40,55, 60,55+72)
 
         stdscr.refresh()
 
