@@ -121,12 +121,37 @@ if __name__ == "__main__":
         if m is None:
             time.sleep(0.1)
             continue
-        elif m.gameId != game.gameId:
-            log.warning("MatchingEngine dropping message not for this game (%s) from %s: '%s'" % (game.gameId, g.name, m))
-            if m.code == GatewaySubmitOrderMessage.code:
-                g.send(GatewayRejectMessage(g.name, m.gameId, m.goid, reason="BAD_GAME_ID"))
-            continue
+
         log.info("MatchingEngine got message from %s: '%s'" % (g.name, m))
+
+        ## check gameid, position, order qty, and num orders
+        if isinstance(m, GatewaySubmitOrderMessage):
+            reason = None
+            if m.gameId != game.gameId:
+                reason="BAD_GAME_ID"
+            elif m.price < 0 or m.price > 100:
+                reason="BAD_PRICE"
+            elif m.qty < 1 or m.qty > 100:
+                reason="BAD_QTY"
+            else:
+                bids = [o for L in b.bids for o in L.orders if o.owner == g.name]
+                asks = [o for L in b.asks for o in L.orders if o.owner == g.name]
+                totalOrders = len(bids+asks)
+                totalQty    = sum(o.qty for o in bids+asks)
+                log.info("owner = %s, totalOrders = %d, totalQty = %d" % (g.name, totalOrders, totalQty))
+                if totalOrders + 1 > 10:
+                    reason="TOO_MANY_ORD"
+                elif totalQty + m.qty > 200:
+                    reason="BAD_TOT_QTY"
+            if reason is not None:
+                g.send(GatewayRejectMessage(g.name, m.gameId, m.goid, reason=reason))
+                continue
+
+        ## ignore non-submits that are not for this gameid too, but no reject message (TODO: pending cancels?)
+        if m.gameId != game.gameId:
+            log.warning("MatchingEngine dropping message not for this game (%s) from %s: '%s'" % (game.gameId, g.name, m))
+            continue
+
         events = []
         gatewayEvents = []
         if isinstance(m, GatewaySubmitOrderMessage):
