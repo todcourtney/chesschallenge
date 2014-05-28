@@ -18,7 +18,7 @@ if prettyBoard:
         chessboardDirectory = os.path.dirname(inspect.getfile(ChessBoard))
 
         pygame.init()
-        pygameScreen = pygame.display.set_mode((480*2, 480),1)
+        pygameScreen = pygame.display.set_mode((480, 480+240),1)
         pygame.display.set_caption('')
 
         # load all images
@@ -58,7 +58,7 @@ def drawPrettyBoard(board):
             pygameScreen.blit(pieces[(x+y)%2][p],(x*60,y*60))
     if os.path.isfile("pnl.png"):
         pnl = pygame.image.load("pnl.png")
-        pygameScreen.blit(pnl, (480,0))
+        pygameScreen.blit(pnl, (0,480))
 
     pygame.display.flip()
 
@@ -86,7 +86,7 @@ messages = []
 try:
     ladderPad = curses.newpad(105, 70)
     boardPad  = curses.newpad(15, 25)
-    logPad    = curses.newpad(20, 52)
+    logPad    = curses.newpad(10, 52)
     ##pnlPad    = curses.newpad(20, 72)
 
     stdscr.addstr("Chess Trading GUI")
@@ -102,9 +102,9 @@ try:
         stdscr.addstr(0,40, "Drops: %d needRecovery: %-5s" % (drops, b.needRecovery))
 
         stdscr.addstr(38,0, "Feed Messages:")
-        logPad.addstr(0,0, "\n".join("%-50s" % msg[:50] for msg in messages[-20:]))
-        messages = messages[-20:] ## discard old
-        logPad.refresh(0,0, 40,0, 60,52)
+        logPad.addstr(0,0, "\n".join("%-50s" % msg[:50] for msg in messages[-10:]))
+        messages = messages[-10:] ## discard old
+        logPad.refresh(0,0, 40,0, 50,52)
 
         ##pnlPad.addstr(0,0, pnl.leaderboardFromSummary(p.getPnl()))
         ##pnlPad.refresh(0,0, 40,55, 60,55+72)

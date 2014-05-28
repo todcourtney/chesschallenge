@@ -142,7 +142,8 @@ if __name__ == "__main__":
         if loop: time.sleep(2)
         z = p.getPnl()
         t0 = min(v[0][1] for v in z.values())
-        plt.figure(figsize=(8,8), tight_layout=True)
+        plt.figure(figsize=(8,4)) #, tight_layout=True)
+        #plt.tight_layout()
         for k in sorted(z.keys()):
             v = z[k]
             times = [(r[1]-t0)/60 for r in v]
