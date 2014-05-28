@@ -116,24 +116,33 @@ if __name__ == "__main__":
                     log.info("FB REPLAY: " + rm)
                     fb.processMessage(rm)
 
+
+        ## cancel all orders for disconnected gateways
+        disconnectCancelEvents = []
+        goodGatewayNames = set(G.name for G in gateways.gateways.values() if G.messenger is not None)
+        canceledOwners = set()
+        for L in b.bids + b.asks:
+            for o in L.orders:
+                if o.owner not in goodGatewayNames:
+                    log.info("  order %s is stale, was owned by %s" % (o.oid, o.owner))
+                    canceledOwners.add(o.owner)
+                    newDisconnectCancelEvents, newGatewayEvents = b.cancelOrder(o.oid,owner=o.owner)
+                    disconnectCancelEvents.extend(newDisconnectCancelEvents)
+        if len(canceledOwners):
+            log.info("deleted all orders from the following unknown or disconnected gateways: " + " ".join(canceledOwners))
+        ## feed handler
+        if len(disconnectCancelEvents):
+            msg = ";".join(str(e) for e in disconnectCancelEvents)
+            f.send(msg)
+            if debugFeedBook:
+                log.info("FB MESSAGE:" + msg)
+                fb.processMessage(msg)
+
         ## try to get and process one message
         m, g = gateways.getIncomingMessage()
         if m is None:
             time.sleep(0.1)
             continue
-
-        events = []
-        gatewayEvents = []
-
-        ## cancel all orders for disconnected gateways
-        for G in gateways.gateways.values():
-            if G.messenger is None:
-                log.info("canceling all orders for disconnected gateway %s" % G.name)
-                for L in b.bids + b.asks:
-                    for o in L.orders:
-                        if o.owner == G.name:
-                            newEvents, newGatewayEvents = b.cancelOrder(o.oid,owner=G.name)
-                            events.extend(newEvents)
 
         ## skip new messages from disconnected
         if g.messenger is None:
@@ -189,6 +198,8 @@ if __name__ == "__main__":
             continue
 
         ## do actual matching logic
+        events = []
+        gatewayEvents = []
         if isinstance(m, GatewaySubmitOrderMessage):
             o = Order(newoid,m.qty,m.side,m.price,owner=g.name,gameId=m.gameId,goid=m.goid)
             newoid += 1
@@ -219,11 +230,12 @@ if __name__ == "__main__":
             gateways.sendToOwner(e)
 
         ## feed handler
-        msg = ";".join(str(e) for e in events)
-        f.send(msg)
-        if debugFeedBook:
-            log.info("FB MESSAGE:" + msg)
-            fb.processMessage(msg)
+        if len(events):
+            msg = ";".join(str(e) for e in events)
+            f.send(msg)
+            if debugFeedBook:
+                log.info("FB MESSAGE:" + msg)
+                fb.processMessage(msg)
 
         ## now check that the local book and reconstructed book look the same
         if debugFeedBook:
