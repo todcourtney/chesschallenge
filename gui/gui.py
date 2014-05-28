@@ -18,7 +18,7 @@ if prettyBoard:
         chessboardDirectory = os.path.dirname(inspect.getfile(ChessBoard))
 
         pygame.init()
-        pygameScreen = pygame.display.set_mode((480, 480),1)
+        pygameScreen = pygame.display.set_mode((480*2, 480),1)
         pygame.display.set_caption('')
 
         # load all images
@@ -56,6 +56,10 @@ def drawPrettyBoard(board):
     for y, rank in enumerate(board):
         for x, p in enumerate(rank):
             pygameScreen.blit(pieces[(x+y)%2][p],(x*60,y*60))
+    if os.path.isfile("pnl.png"):
+        pnl = pygame.image.load("pnl.png")
+        pygameScreen.blit(pnl, (480,0))
+
     pygame.display.flip()
 
 chess = ChessBoard()
