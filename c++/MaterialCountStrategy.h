@@ -2,7 +2,6 @@
 #define __MATERIAL_COUNT_STRATEGY_H__
 
 #include <CStrategy.h>
-#include <map>
 
 ////////////////////////////////////////////////////////////
 // Example C++ strategy that estimates the probability that
@@ -21,8 +20,8 @@ public:
   ////////////////////////////////////////////////////////// 
   // All CStrategy subclass must implement these methods.
   ////////////////////////////////////////////////////////// 
-  void onExchangeMessage(const ExchangeMessage& em);
-  void onChessMessage(const ChessMessage& cm);
+  void onExchangeMessage(const CExchangeMessage& em);
+  void onChessMessage(const CChessMessage& cm);
 
 private:
   void cancelAllOrders();

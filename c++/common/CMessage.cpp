@@ -1,21 +1,21 @@
 #include <CMessage.h>
 
-ExchangeMessage::Type ExchangeMessage::type() const
+CExchangeMessage::Type CExchangeMessage::type() const
 {
   return type_;
 }
 
-const COrder& ExchangeMessage::order() const
+const COrder& CExchangeMessage::order() const
 {
   return order_;
 }
 
-ExchangeMessage::ExchangeMessage()
+CExchangeMessage::CExchangeMessage()
 {
   type_ = EXCHANGE_UNKNOWN;
 }
 
-ExchangeMessage::ExchangeMessage(const std::string& type, COrder order)
+CExchangeMessage::CExchangeMessage(const std::string& type, COrder order)
   : order_(order)
 {
   if      (type == "XN") type_ = EXCHANGE_NEW_GAME;
@@ -25,33 +25,33 @@ ExchangeMessage::ExchangeMessage(const std::string& type, COrder order)
   else                   type_ = EXCHANGE_UNKNOWN;
 }
 
-ChessMessage::Type ChessMessage::type() const
+CChessMessage::Type CChessMessage::type() const
 {
   return type_;
 }
 
-const std::string& ChessMessage::gameid() const
+const std::string& CChessMessage::gameid() const
 {
   return gameid_;
 }
 
-const std::string& ChessMessage::move() const
+const std::string& CChessMessage::move() const
 {
   return move_;
 }
 
-const std::vector<std::string>& ChessMessage::history() const
+const std::vector<std::string>& CChessMessage::history() const
 {
   return history_;
 }
 
-ChessMessage::ChessMessage()
+CChessMessage::CChessMessage()
 {
   type_ = CHESS_UNKNOWN;
   gameid_ = std::string();
 }
 
-ChessMessage::ChessMessage(
+CChessMessage::CChessMessage(
   const std::string& type,
   const std::string& gid,
   const std::string& move,

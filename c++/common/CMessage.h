@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-class ExchangeMessage
+class CExchangeMessage
 {
 public:
   // Methods for C++ strategy classes.
@@ -27,11 +27,11 @@ private:
 
 public:
   // Methods for python controller.
-  ExchangeMessage();
-  ExchangeMessage(const std::string& type, COrder order);
+  CExchangeMessage();
+  CExchangeMessage(const std::string& type, COrder order);
 };
 
-class ChessMessage
+class CChessMessage
 {
 public:
   // Methods for C++ strategy class.
@@ -62,8 +62,8 @@ private:
 
 public:
   // Methods for python controller.
-  ChessMessage();
-  ChessMessage(
+  CChessMessage();
+  CChessMessage(
     const std::string& type,
     const std::string& gid,
     const std::string& move,

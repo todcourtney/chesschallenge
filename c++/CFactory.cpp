@@ -7,6 +7,7 @@
 #include "CFactory.h"
 #include "MaterialCountStrategy.h"
 #include "StockfishStrategy.h"
+#include "MeTooStrategy.h"
 #include <stdexcept>
 
 CStrategy* CFactory::makeStrategy(const std::string& strategyName)
@@ -15,6 +16,8 @@ CStrategy* CFactory::makeStrategy(const std::string& strategyName)
     return new MaterialCountStrategy();
   else if (strategyName == "StockfishStrategy")
     return new StockfishStrategy();
+  else if (strategyName == "MeTooStrategy")
+    return new MeTooStrategy();
   else
     throw std::runtime_error("Unknown strategy type");
 }

@@ -32,6 +32,9 @@ class CStrategyWrapper(strat.Strategy):
   def onExchangeMessage(self,m):
     self.syncGateway()
     self.syncBook(m)
+    # TODO TODO TODO
+    # Appears that m is always a string, and I can't
+    # access any of the ExchangeMessage fields.
     if not isinstance(m, ExchangeMessage):
       return
     em = self.makeExchangeMessage(m)
@@ -121,9 +124,9 @@ class CStrategyWrapper(strat.Strategy):
       history = vector_s()
       for h in m.history:
         history.push_back(h)
-      cm = ChessMessage(m.code, m.gameId, m.move, history, "")
+      cm = CChessMessage(m.code, m.gameId, m.move, history, "")
     elif isinstance(m, ChessResultMessage):
-      cm = ChessMessage(m.code, m.gameId, "", vector_s(), m.result)
+      cm = CChessMessage(m.code, m.gameId, "", vector_s(), m.result)
     return cm
 
   def makeExchangeMessage(self, m):
@@ -131,7 +134,7 @@ class CStrategyWrapper(strat.Strategy):
       order = COrder(m.gameId, int(m.oid), int(m.price), int(m.qty), int(m.side()))
     else:
       order = COrder(m.gameId, 0, 0, 0, COrder.BUY);
-    em = ExchangeMessage(m.code, order)
+    em = CExchangeMessage(m.code, order)
     return em
 
   def commitOrders(self):

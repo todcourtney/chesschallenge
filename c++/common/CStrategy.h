@@ -42,8 +42,8 @@ class CStrategy
 {
 public:
   // Callbacks to be implemented by subclasses.
-  virtual void onExchangeMessage(const ExchangeMessage& em) = 0;
-  virtual void onChessMessage(const ChessMessage& cm) = 0;
+  virtual void onExchangeMessage(const CExchangeMessage& em) = 0;
+  virtual void onChessMessage(const CChessMessage& cm) = 0;
 
   // Methods for C++ strategy classes.
   CGateway& gateway();

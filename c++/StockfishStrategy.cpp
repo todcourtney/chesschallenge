@@ -12,19 +12,19 @@ StockfishStrategy::~StockfishStrategy()
   // nothing
 }
 
-void StockfishStrategy::onExchangeMessage(const ExchangeMessage& em)
+void StockfishStrategy::onExchangeMessage(const CExchangeMessage& em)
 {
   // This strategy does nothing with exchange messages.
 }
 
-void StockfishStrategy::onChessMessage(const ChessMessage& cm)
+void StockfishStrategy::onChessMessage(const CChessMessage& cm)
 {
   // If unknown message type, do nothing.
-  if (cm.type() == ChessMessage::CHESS_UNKNOWN)
+  if (cm.type() == CChessMessage::CHESS_UNKNOWN)
     return;
 
   // If not move (is new game or result) cancel all outstanding orders.
-  if (cm.type() != ChessMessage::CHESS_MOVE) {
+  if (cm.type() != CChessMessage::CHESS_MOVE) {
     cancelAllOrders();
     return;
   }
