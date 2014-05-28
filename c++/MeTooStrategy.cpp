@@ -20,15 +20,14 @@ void MeTooStrategy::onChessMessage(const CChessMessage& cm)
 
 void MeTooStrategy::onExchangeMessage(const CExchangeMessage& em)
 {
-  std::cout << "HI HI HI!!!!" << std::endl;
-
   CGateway& gw = gateway();
   const CBook& b = book();
 
   // Don't do anything unless the book has other orders in it.
-  std::cout << "ZZZ: " << b.bidLevels() << ", " << b.askLevels() << std::endl;
-  if (b.bidLevels() == 0 || b.askLevels() == 0)
+  if (b.bidLevels() == 0 || b.askLevels() == 0) {
+    cancelAllOrders();
     return;
+  }
 
   unsigned buyPrice = b.bidPrice(0);
   unsigned sellPrice = b.askPrice(0);
@@ -59,5 +58,18 @@ void MeTooStrategy::onExchangeMessage(const CExchangeMessage& em)
     gw.addOrder(em.order().gameid(), buyPrice, maxOrderQuantity_, COrder::BUY);
   if (!haveOrderAtAsk && qtyShort + maxOrderQuantity_ <= maxPosition_)
     gw.addOrder(em.order().gameid(), sellPrice, maxOrderQuantity_, COrder::SELL);
+}
+
+void MeTooStrategy::cancelAllOrders()
+{
+  // Cancel all outstanding orders. First get the
+  // list of live orders from the gateway, then
+  // tell the gateway to cancel each of them.
+  CGateway& gw = this->gateway();
+  const std::vector<COrder> ordersLive = gw.ordersLive();
+  for (size_t i=0; i < ordersLive.size(); ++i) {
+    const COrder order = ordersLive[i];
+    gw.cancelOrder(order.gameid(), order.orderid());
+  }
 }
 

@@ -23,6 +23,8 @@ public:
   void onChessMessage(const CChessMessage& cm);
 
 private:
+  void cancelAllOrders();
+
   const unsigned maxPosition_;
   const unsigned maxOrderQuantity_;
 };

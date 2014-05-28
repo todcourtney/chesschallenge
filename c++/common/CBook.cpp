@@ -81,7 +81,7 @@ void CBook::setAsk(
   if (i >= 5)
     throw std::runtime_error("book has max 5 levels");
   if (askLevels_ <= i)
-    bidLevels_ = i+1;
+    askLevels_ = i+1;
   asks_[i].price = price;
   asks_[i].quantity = quantity;
   asks_[i].orders = orders;
