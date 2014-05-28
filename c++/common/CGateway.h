@@ -9,13 +9,28 @@ class CGateway
 public:
   // Methods for C++ strategy classes.
 
+  //////////////////////////////////////////////////////////
   // Accessors for position and orders.
+  //////////////////////////////////////////////////////////
+
+  // Our current open position, in terms of number of contracts/shares.
   int position() const;
+
+  // A list of orders that we have sent to the gateway,
+  // but have not yet been acknowledged.
   const std::vector<COrder>& ordersPending() const;
+
+  // A list of live orders that are resting the book. These orders
+  // are available for other people to trade against.
   const std::vector<COrder>& ordersLive() const;
+
+  // A list of orders that we have requested to be canceled,
+  // but have not yet been canceled.
   const std::vector<COrder>& ordersCanceling() const;
 
+  //////////////////////////////////////////////////////////
   // Methods to add and cancel orders.
+  //////////////////////////////////////////////////////////
   void addOrder(const std::string& gameid, unsigned price, unsigned quantity, int side);
   void cancelOrder(const std::string& gameid, unsigned orderid);
 

@@ -35,6 +35,7 @@ private:
   Level asks_[MAX_LEVELS];
 
 public:
+  // Accessors for python controller.
   CBook();
   void reset();
   void setBid(unsigned i, unsigned price, unsigned quantity, unsigned orders);

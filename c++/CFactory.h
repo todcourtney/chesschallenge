@@ -2,6 +2,10 @@
 #define __CFACTORY_H__
 #include <CStrategy.h>
 
+////////////////////////////////////////////////////////////
+// Any C++ strategy that you create should be added to the
+// makeStrategy() method in CFactory.cpp.
+////////////////////////////////////////////////////////////
 class CFactory
 {
 public:

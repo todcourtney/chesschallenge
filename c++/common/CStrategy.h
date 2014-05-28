@@ -7,6 +7,37 @@
 #include <CBoard.h>
 #include <CStockfish.h>
 
+////////////////////////////////////////////////////////////
+// All specific strategies must subclass from CStrategy
+// and implement onExchangeMessage() and onChessMessage().
+// All relevant state is accessible through the gateway,
+// book, board, and stockfish objects.
+//
+// onExchangeMessage(): you get this callback whenever a new
+//   event happens at the exchange, such as someone adding
+//   or canceling an order, or a trade occuring
+//
+// onChessMessage(): you get this callabck whenever a chess
+//   game broadcasts a new move, the ChessMessage object
+//   will give you the current move and the entire history
+//   of moves
+//
+// gateway: provides getters for all live, pending, and
+//  canceling orders, also methods for submitting your own
+//  new orders and canceling your existing orders
+//
+// book: provides a 5-level view on each of the buy and sell
+//   sides of passive orders that are live and available to
+//   trade against
+//
+// board: simple representation of the chessboard, up to
+//   date with history of the current game
+//
+// stockfish: provides metrics/scores computed by the open-
+//   source stockfish chess engine, might be useful in
+//   building your own strategies
+////////////////////////////////////////////////////////////
+
 class CStrategy
 {
 public:

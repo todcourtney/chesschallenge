@@ -4,6 +4,14 @@
 #include <string>
 #include <vector>
 
+////////////////////////////////////////////////////////////
+// Stockfish is an open source chess engine that computes
+// various metrics given the chess board state. There is
+// no great documentation for the various scores, but
+// they are interesting values and have some predictive
+// power.
+////////////////////////////////////////////////////////////
+
 class CStockfish
 {
 public:
@@ -38,12 +46,23 @@ public:
     NUM_SCORE_SUBTYPES
   };
 
+  // The Forsyth-Edwards Notation for describing the chess board. See wikipedia.
   const std::string& getFEN() const;
+
+  // A list of legal moves that the next player can make.
   const std::vector<std::string>& legalMoves() const;
+
+  // A metric estimating the probability we are mid-game (not end-game).
   float percentMidGame() const;
+
+  // Two metrics estimating the probability that we are end-game (soon to finish).
   float percentEndGame1() const;
   float percentEndGame2() const;
+
+  // The ultimate stockfish score. Play around with it.
   float totalScore() const;
+
+  // The subscores that go in to computing the total score (above).
   float score(ScoreType scoreType, ScoreSubtype scoreSubtype) const;
 
 private:

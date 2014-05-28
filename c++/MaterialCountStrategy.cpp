@@ -15,7 +15,7 @@ MaterialCountStrategy::~MaterialCountStrategy()
 
 void MaterialCountStrategy::onExchangeMessage(const ExchangeMessage& em)
 {
-
+  // This strategy does nothing with exchange messages.
 }
 
 void MaterialCountStrategy::onChessMessage(const ChessMessage& cm)
@@ -73,6 +73,9 @@ void MaterialCountStrategy::onChessMessage(const ChessMessage& cm)
 
 void MaterialCountStrategy::cancelAllOrders()
 {
+  // Cancel all outstanding orders. First get the
+  // list of live orders from the gateway, then
+  // tell the gateway to cancel each of them.
   CGateway& gw = this->gateway();
   const std::vector<COrder> ordersLive = gw.ordersLive();
   for (size_t i=0; i < ordersLive.size(); ++i) {
@@ -83,6 +86,10 @@ void MaterialCountStrategy::cancelAllOrders()
 
 unsigned MaterialCountStrategy::computeFairPrice() const
 {
+  // We define the fair price as the difference
+  // between the white score and the black score, then
+  // scale the result.
+
   int whiteScore = 0;
   int blackScore = 0;
 
@@ -105,6 +112,7 @@ unsigned MaterialCountStrategy::computeFairPrice() const
 
 int MaterialCountStrategy::getScore(char piece) const
 {
+  // We asssign some reasonable looking weights to each piece.
   char p = tolower(piece);
   switch (p) {
     case 'p': return 1;
@@ -119,6 +127,7 @@ int MaterialCountStrategy::getScore(char piece) const
 
 unsigned MaterialCountStrategy::getPrice(int score) const
 {
+  // Scale the score to a price between 1 and 99.
   double price = 0.50 + (score*0.01);
   if (price < 0.01) price = 0.01;
   if (price > 0.99) price = 0.99;

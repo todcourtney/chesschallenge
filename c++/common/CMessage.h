@@ -44,7 +44,13 @@ public:
 
   Type type() const;
   const std::string& gameid() const;
+
+  // The move just played.
   const std::string& move() const;
+
+  // A history of all moves, including the current move.
+  // You can tell if white or black just moved by whether
+  // the history vector has an odd or even length.
   const std::vector<std::string>& history() const;
 
 private:

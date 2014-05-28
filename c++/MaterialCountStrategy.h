@@ -4,12 +4,23 @@
 #include <CStrategy.h>
 #include <map>
 
+////////////////////////////////////////////////////////////
+// Example C++ strategy that estimates the probability that
+// white will win as a function of the sum of remaining
+// pieces, weighted by how powerful they are. Like all C++
+// strategies, this is a subclass of CStrategy and
+// implements onExchangeMessage() and onChessMessage().
+////////////////////////////////////////////////////////////
+
 class MaterialCountStrategy : public CStrategy
 {
 public:
   MaterialCountStrategy();
   virtual ~MaterialCountStrategy();
 
+  ////////////////////////////////////////////////////////// 
+  // All CStrategy subclass must implement these methods.
+  ////////////////////////////////////////////////////////// 
   void onExchangeMessage(const ExchangeMessage& em);
   void onChessMessage(const ChessMessage& cm);
 
