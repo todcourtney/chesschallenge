@@ -17,7 +17,7 @@ $(shell echo "-- OUTPUT = $(SWIGOUTDIR)/$(SWIGLIB)" >&2)
 CXX = g++
 CXXFLAGS = -g -O0 -march=corei7 -Wall -I. -Icommon -fPIC
 
-INCPYTHON = $(shell dirname `locate Python.h | head -n1`)
+INCPYTHON = $(shell dirname `locate Python.h | grep -v ".hip" | head -n1`)
 $(shell echo "-- INCPYTHON = $(INCPYTHON)" >&2)
 
 .PHONY: clean all
@@ -39,7 +39,7 @@ $(SWIGSOURCES): $(SWIGFILES) $(OBJDIR)/dummy
 	swig -c++ -python -outdir $(SWIGOUTDIR) -o $@ $<
 
 $(SWIGOBJDIR)/%.o: $(SWIGSOURCES) $(OBJDIR)/dummy
-	$(CXX) -c $(CXXFLAGS) -I$(INCPYTHON) -o $@ $<
+	$(CXX) -c $(CXXFLAGS) -I$(INCPYTHON) -Wno-unused-but-set-variable -o $@ $<
 
 clean:
 	rm -rf $(OBJDIR)
