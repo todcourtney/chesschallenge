@@ -11,10 +11,11 @@ from messages import *
 from example_models import *
 
 class SimpleChessMoveExecutor(strat.Strategy):
-    def __init__(self, name, model):
+    def __init__(self, name, model, addQty=10):
         super(SimpleChessMoveExecutor, self).__init__(name)
         self.model = model
         self.maxPos = 100
+        self.addQty = addQty
 
     def onChessMessage(self,m):
         ## pass through to model
@@ -33,7 +34,6 @@ class SimpleChessMoveExecutor(strat.Strategy):
         log.info("fairPrice = %f buyPrice = %d sellPrice = %d" % (fairPrice, buyPrice, sellPrice))
 
         ## keep desired quantity showing at indicated price
-        desiredQty = 10
         alreadyHaveBuy  = False
         alreadyHaveSell = False
         ordersPending, ordersLive, ordersCanceling = self.gateway.orders()
@@ -54,16 +54,16 @@ class SimpleChessMoveExecutor(strat.Strategy):
                 elif True or o.price < sellPrice:
                     self.gateway.cancelOrder(m.gameId, o.oid)
 
-        if not alreadyHaveBuy  and self.gateway.pos + desiredQty <  self.maxPos: self.gateway.addOrder(m.gameId, desiredQty, Order.BUY , buyPrice)
-        if not alreadyHaveSell and self.gateway.pos - desiredQty > -self.maxPos: self.gateway.addOrder(m.gameId, desiredQty, Order.SELL, sellPrice)
+        if not alreadyHaveBuy  and self.gateway.pos + self.addQty <  self.maxPos: self.gateway.addOrder(m.gameId, self.addQty, Order.BUY , buyPrice)
+        if not alreadyHaveSell and self.gateway.pos - self.addQty > -self.maxPos: self.gateway.addOrder(m.gameId, self.addQty, Order.SELL, sellPrice)
 
 
 class SimpleInventoryMarketMaker(strat.Strategy):
     def __init__(self, name):
         super(SimpleInventoryMarketMaker, self).__init__(name)
 
-        self.maxPos = 10
-        self.addQty = 1
+        self.maxPos = 30
+        self.addQty = 5
         self.cooldown = 2
 
     def onExchangeMessage(self, exchangeMessage):
@@ -148,8 +148,8 @@ class MeTooMarketMaker(strat.Strategy):
     def __init__(self, name):
         super(MeTooMarketMaker, self).__init__(name)
 
-        self.maxPos = 10
-        self.addQty = 1
+        self.maxPos = 20
+        self.addQty = 5
         self.cooldown = 5
 
     def onExchangeMessage(self, exchangeMessage):
@@ -228,8 +228,8 @@ class BrokenMarketMaker(strat.Strategy):
 if __name__ == "__main__":
     import sys
     if "SCO"  in sys.argv: SCO  = SimpleChessMoveExecutor("SCO", OpeningChessModel("OpeningChessModel"))
-    if "SCM"  in sys.argv: SCM  = SimpleChessMoveExecutor("SCM", SimpleMaterialCountChessModel("SimpleMaterialCountChessModel"))
-    if "SCS"  in sys.argv: SCS  = SimpleChessMoveExecutor("SCS", StockfishChessModel("StockfishChessModel"))
+    if "SCM"  in sys.argv: SCM  = SimpleChessMoveExecutor("SCM", SimpleMaterialCountChessModel("SimpleMaterialCountChessModel"), addQty=7)
+    if "SCS"  in sys.argv: SCS  = SimpleChessMoveExecutor("SCS", StockfishChessModel("StockfishChessModel"), addQty=8)
     if "SIMM" in sys.argv: SIMM = SimpleInventoryMarketMaker("SIMM")
     if "M2M"  in sys.argv: M2M  = MeTooMarketMaker("M2M")
     if "BMM"  in sys.argv: BMM  = BrokenMarketMaker("BMM")
