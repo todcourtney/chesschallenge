@@ -1,5 +1,5 @@
 ## matching engine
-PYTHONPATH=common python me/me.py data/onelinegames/www.chessgames.com.csv /tmp/pnl.csv
+PYTHONPATH=common python me/me.py <(shuf data/onelinegames/www.chessgames.com.csv) /tmp/pnl.csv
 ## pnl
 export PYTHONPATH=common; watch python me/pnl.py /tmp/pnl.csv
 ## gui
