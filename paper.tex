@@ -1,0 +1,85 @@
+\documentclass{article}
+\begin{document}
+
+\title{A Real-Time Chess Prediction Market}
+\author{Michael P. Schubmehl}
+\date{}
+
+\maketitle
+
+%\abstract{
+%}
+  
+\abstract
+{
+Successful algorithmic trading in the real world requires a deep knowledge of mathematical modeling,
+high-performance computing, software and hardware design, optimization, and data analysis. Our
+real-time chess prediction market aims to reproduce many of these fascinating challenges at a small
+scale, encouraging students to synthesize knowledge from many disciplines. While it is simple enough
+for talented high school students to get up and running quickly, the problem is sufficiently rich
+that even gradutate students and seasoned industry veterans can happily spend hours trying to eke
+out an edge over the competition.
+}
+  
+
+\section{Introduction}
+
+A prediction market is a mechanism that allows traders with diverse information sets to come
+together to discover an event's probability. In our real-time chess prediction market, students are
+tasked with writing an algorithmic trading engine that continuously predicts the probability white
+will win a chess match, as it is multicast to them at approximately one move per second. A real-time
+anonymized price feed containing all orders in the prediction market, plus any trades between
+participants, is also multicast to them in real-time. If a student's forecast is above the
+instantaneous market price, they can buy from their peers, and if it falls below the market price,
+they can sell. When the game ends in a victory for white, whether by checkmate or concession, any
+net sellers pay net buyers a virtual \$100 per contract. If the game ends in a draw or a win for
+black, no further money changes hands, so that net buyers will have lost their purchase price, and
+net sellers will have gained theirs. The game is zero sum, so that the total profit across all
+players will equal zero.
+
+
+
+
+
+\section{Details}
+
+A prediction market is a mechanism that allows traders with diverse information sets to come
+together to discover an event's probability. At its core, the market consists of a matching engine
+that accepts orders from participants: buy 10 contracts at any price up to \$60, for example, or
+sell 5 contracts at any price \$70 or higher. In many cases, the matching engine will not find a
+counterparty for an incoming order, so it simply holds the order until a compatible order in the
+other direction arrives. 
+
+\section{Implementation}
+
+feed parsing: chess and book (auto book building to make it easy, although this could be done faster)
+
+pygame chess
+
+stockfish
+
+python multicast
+
+python matching engine
+
+python or c++ API
+
+seed bots
+
+\section{Results}
+
+most participants began by copying the stockfish-based seed bot
+
+Students at USACO training camp had only four hours to play (two training, two real). Were able to make some reasonable progress, but more time and higher experience level would have made it more fun. 
+
+Machine learning benefits hugely. Most successful team was their coaches, who hooked up GNU Chess
+and averaged its predictions with Stockfish. While they pursued this strategy, they clearly
+dominated teams using Stockfish-only bots.
+
+\section{Future Work}
+
+Wider diversity of input bots (possibly including past competition code), especially that better illustrate points along the speed-vs-intelligence frontier.
+
+
+
+\end{document}
