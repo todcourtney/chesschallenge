@@ -7,19 +7,13 @@
 
 \maketitle
 
-%\abstract{
-%}
-  
-\abstract
-{
-Successful algorithmic trading in the real world requires a deep knowledge of mathematical modeling,
-high-performance computing, software and hardware design, optimization, and data analysis. Our
-real-time chess prediction market aims to reproduce many of these fascinating challenges at a small
-scale, encouraging students to synthesize knowledge from many disciplines. While it is simple enough
-for talented high school students to get up and running quickly, the problem is sufficiently rich
-that even gradutate students and seasoned industry veterans can happily spend hours trying to eke
-out an edge over the competition.
-}
+\abstract { Successful algorithmic trading in the real world requires a deep knowledge of
+  mathematical modeling, high-performance computing, software and hardware design, optimization, and
+  data analysis. Our real-time chess prediction market aims to reproduce many of these fascinating
+  challenges at a small scale, encouraging students to synthesize knowledge from many
+  disciplines. While the problem is simple enough for talented high school students to get up and
+  running quickly, it is sufficiently rich that even gradutate students and seasoned
+  industry veterans can happily spend hours trying to eke out an edge over the competition.  }
   
 
 \section{Introduction}
@@ -30,56 +24,188 @@ tasked with writing an algorithmic trading engine that continuously predicts the
 will win a chess match, as it is multicast to them at approximately one move per second. A real-time
 anonymized price feed containing all orders in the prediction market, plus any trades between
 participants, is also multicast to them in real-time. If a student's forecast is above the
-instantaneous market price, they can buy from their peers, and if it falls below the market price,
-they can sell. When the game ends in a victory for white, whether by checkmate or concession, any
-net sellers pay net buyers a virtual \$100 per contract. If the game ends in a draw or a win for
-black, no further money changes hands, so that net buyers will have lost their purchase price, and
-net sellers will have gained theirs. The game is zero sum, so that the total profit across all
-players will equal zero.
+instantaneous market price, he can buy from his peers, and if it falls below the market price, he
+can sell. When the game ends in a victory for white, whether by checkmate or concession, any net
+sellers pay net buyers a virtual \$100 per contract. If the game ends in a draw or a win for black,
+no further money changes hands, so that net buyers will have lost their purchase price, and net
+sellers will have gained any sales proceeds. The game is zero sum, meaning that the total profit
+across all players will equal zero.
 
+At its core, the prediction market consists of a matching engine that accepts limit orders from
+participants: buy 10 contracts at any price up to \$60, for example, or sell 5 contracts at any
+price \$70 or higher. In many cases, the matching engine will not find a counterparty for an
+incoming order, so it simply holds the order until a compatible order in the other direction
+arrives. This collection of resting limit orders is called an order book. If a counterparty is
+immediately available, on the other hand, the matching engine selects resting orders with the best
+prices, or the earliest to arrive in the event of multilple elegible orders at a single best
+price. See Table \ref{table:book} for an example.
 
+\begin{table}[ht]
+\centering
+\begin{tabular}{r c l}
+\hline\hline
+buys & price & sells \\
+\hline
+            & 58 &            \\
+            & 57 & 10         \\
+            & 56 & 3 1 1      \\
+            & 55 & 1          \\
+            & 54 &            \\
+      3 2 1 & 53 &            \\
+     2 5 10 & 52 &            \\
+\hline
+\end{tabular}
+\label{table:book} % is used to refer this table in the text
+\caption{Sample order book, displayed as price ladder. There are, three orders to buy at a price of
+  53, for one contract, two contracts, and three contracts. A new sell order for two contracts at a
+  limit price of 52 would seem to be eligible to trade with any of the six buy orders. As in most
+  markets, priority is given to the resting order with the best price, or the earliest to arrive
+  within that best price (price-time priority). So our example sell would actually trade against the
+  one-contract order at the head of the buy queue at 53, then one of the two contracts in the next
+  order in line at that price. Note that the head of the queue is displayed as closest to the
+  central price column in this example.}
+\end{table}
 
+Several types of strategies are possible. A buy-and-hold strategy might simply take a position at a
+favorable price during the game and wait for it to end. One of our sample strategies operated in
+this fashion by storing a table of victory probabilities for white, conditional only on the chess
+opening so far. If this estimate differed from the current market price, the strategy would buy or
+sell as appropriate, then wait for the end of the game.
 
+A continuous trading strategy might buy and sell many times during the game, and could incorporate
+orders that demand liquidity (priced to trade immediately against resting orders on the opposite
+side) and orders that provide liquidity (priced to rest). Another of our sample strategies used a
+chess engine's position scoring, calibrated using a linear regression to get an estimate of the
+probability of white's victory from the current position as the game progressed. It then placed buy
+(sell) orders a few percent below (above) its estimated fair price. If the current market was 53-55,
+as in Table \ref{table:book}, but the model estimated a fair probability of 51, it might place a buy
+order at 50 and a sell order at 52, resulting in an immediate fill for the sell order, plus a new
+resting buy order. Over the course of the game, such a strategy could buy and sell many times to
+help correct the price.
 
-\section{Details}
+Part of the problem's appeal stems from the many possible routes to building an effective
+strategy. Students with a deep understanding of chess may focus on improving the quality of the
+chess analysis, by devising their own features (e.g., point difference in remaining material,
+whether king has been moved, number of checks so far, number of threatened pieces), or by pushing
+the chess engine to do very deep searches to better understand the current position. Students with a
+machine learning or statistics background may be more inclined to take existing features from one or
+more chess engines and study ways of combining them into better probability forecasts. Hardcore
+coders may want to focus on speed, implementing a very simple model (e.g., if white takes a piece,
+immediately buy at the best available price) as quickly as possible. Aspiring data scientists might
+try to use a large store of chess games (provided with the code) to look for patterns, like our
+sample dictionary-of-partial-openings strategy. Traders might focus more on order imbalances and
+market forces, largely ignoring the chess itself.
 
-A prediction market is a mechanism that allows traders with diverse information sets to come
-together to discover an event's probability. At its core, the market consists of a matching engine
-that accepts orders from participants: buy 10 contracts at any price up to \$60, for example, or
-sell 5 contracts at any price \$70 or higher. In many cases, the matching engine will not find a
-counterparty for an incoming order, so it simply holds the order until a compatible order in the
-other direction arrives. 
+The presence of such a diverse set of approaches very naturally leads to interesting trading
+dynamics, including the emergence of an efficient frontier of strategies along the
+speed-vs-intelligence spectrum. Some computationally intensive strategies with great predictions
+can easily profit alongside simple, fast strategies, but it will be very difficult to succeed with a
+model that is slower than its equally-predictive peers, or that is less predictive than its
+equally-fast peers. Early leaders can easily find themselves unseated by later innovations.
 
 \section{Implementation}
 
-feed parsing: chess and book (auto book building to make it easy, although this could be done faster)
+The code to run the competition is written entirely in python. Each competitor will run a strategy
+process that uses a python (or C++) API to subscribe to two multicast channels: one that delivers
+chess moves (and beginning- or end-of-game messages), and one that delivers the anonymized order
+book from the matching engine, plus any trades. The deltas sent in the multicast messages are
+directly available to competitors, in a simple pipe-delimited plaintext format, but most competitors
+will use supplied code that builds the current state of the chess game, and builds the full order
+book. These convenience functions are readable and not highly optimized, encouraging students to
+tinker and improve them if they desire. The API is also set up to connect the student's process to
+the matching engine over a TCP connection for order and cancel submission and subsequent status
+updates and trade notifications.
 
-pygame chess
+To avoid delays caused by slow receivers, each connection is handled by a separate python thread,
+and messages are consumed by the main matching engine thread as they become fully available from
+each student connection. The matching engine validates these incoming requests, sending order
+rejections for orders that are too large, have bad prices, or would create too large a position for
+the student. Accepted orders are acknowledged and then processed by the matching engine. Any resting
+orders can be canceled using the API if desired.
 
-stockfish
+Working sample strategies serve dual purposes as a quick-start guide to illustrate the API, and a
+jumping off point for research and refinement. Some of the sample strategies react only to chess
+moves, or only to market data, and use different logic to decide where and when to place
+orders. This diverse set of examples illustrates the many paths to an improved solution. Since it's
+difficult to get started placing orders of your own without seeing some trading around a reasonable
+price, these seed bots also serve as the initial competitors. As students make better and better
+strategies over the course of the contest, they can also serve as a source of relatively less
+informed order flow.
 
-python multicast
+The free Stockfish chess engine provided a starting point in one of our best sample strategies for
+those students inclined to push the boundaries on the chess front. It has a simple command line
+interface that allows us to feed it the current board position and get an evaluation that contains
+an overall score (not a probability directly), plus a few dozen features used in forming the
+score. There are also commands to do best-move searches to various depths, but we left those as an
+avenue for interested students to explore.
 
-python matching engine
-
-python or c++ API
-
-seed bots
+The current state of the competition is displayed in realtime on a projector at the front of the
+computer lab, although the GUI client operates off the same public chess and order feeds used by
+strategy processes, and can be run by students directly if desired. The chess board itself is based
+on a pygame package called ChessBoard, which keeps the state of the board, checks move legality, and
+allows a user to query the 8 by 8 grid of pieces. It can also display a simple GUI of the
+board. Cumulative profit and loss stats are computed by the matching engine on a per-competitor
+basis and written to a file as the game progresses. The profits and losses are tallied and graphed
+by the GUI for display below the chess board. Finally, a simple ncurses GUI shows the current price
+ladder, and announces the game result when it ends. These three displays allow competitors to keep
+track of the action centrally as their strategies succeed or fail. Bugs can be obvious from the
+price ladder, or from a sharp money-losing trend, and model improvements are equally visible when
+strategies suddenly take off.
 
 \section{Results}
 
-most participants began by copying the stockfish-based seed bot
+The contest ran during the 2014 USACO summer training camp at Clemson University.
+%% details about participants, backgrounds, etc.
+Students were given a 30-minute lecture to explain prediction markets, plus a quick tour of the API,
+and then turned loose on the problem in teams of 2-4. After a two-hour practice session, during
+which participants developed and tested strategies, we reset all accounts to zero dollars, and
+kicked off a two-hour finals round. Students were still allowed to stop, modify, debug, and restart
+their strategies at will, but the always-on nature of the contest encouraged them to prepare changes
+off to the side, then bounce their production strategy briefly to pick up the new code.
 
-Students at USACO training camp had only four hours to play (two training, two real). Were able to make some reasonable progress, but more time and higher experience level would have made it more fun. 
+Most teams began by starting up a copy of the Stockfish-based seed bot, completely unmodified, so
+that they could make some money off of the less-sophisticated seed bots while they worked. Nobody
+seemed to realize at this stage of the game that they could have made even a modest performance
+improvement and walked away with an early lead by getting ahead of their otherwise-identical
+competition. Several teams did realize that they could easily modify the trading parameters of their
+strategy to trade more contracts, and hence multiply their winnings. Others started to experiment
+with different trading parameters, and some decided to switch to one of the other example bots as a
+base due to the crowding effect of so many Stockfish bots.
 
-Machine learning benefits hugely. Most successful team was their coaches, who hooked up GNU Chess
-and averaged its predictions with Stockfish. While they pursued this strategy, they clearly
-dominated teams using Stockfish-only bots.
+One team with a particularly strong chess background commented that the trading bots were really
+wrong about how certain games were going, and they could ``do better by hand'', leading to the
+fascinating suggestion to develop a quick manual order entry tool. Unfortunately, we didn't get to
+see them put this into practice, as the team decided that it wasn't interesting enough from a coding
+standpoint. Trading glory, virtual dollars, and the very real iPad mini prizes for the winning team
+proved insufficient to distract from a fun problem.
 
-\section{Future Work}
+Ultimately, the best submission came from the graduate student coaches of the training came, who
+were able to integrate a second chess engine (GNU Chess) and average the two weak learners into a
+much stronger prediction for the true probability. This exhibition submission illustrated one of the
+main problems with running the contest for high school students, even of the calibur present at the
+camp: they were plenty bright, but simply lacked exposure to a wide range of useful skills and
+techniques. Advanced college students and graduate students are clearly far more able to innovate
+new strategies.
 
-Wider diversity of input bots (possibly including past competition code), especially that better illustrate points along the speed-vs-intelligence frontier.
+The other main weakness of the contest was time. Four hours is enough for seasoned algorithmic
+trading veterans to jump in and do something interesting, but even the extensive example bots and
+API documentation seem unable to reduce the initial learning curve much below an hour for students
+exposed for the first time. Students were allowed to ask any questions they wanted during the
+contest, and we continued to get basic market structure and coding questions through the first half
+of the practice session.
 
+% would be nice to have record of some seed bots trading to make it easier to do market-based features
 
+% nice to have sample R code for model building and data analysis
+
+\section{Conclusion}
+
+Addressing issues of skill base and time in future iterations or adaptations of the contest would
+certainly make it even more fun, but the students' excitement during the challenge was already
+palpable. The instant feedback of the prediction market, the team coding, the modeling element, and
+the pressure of developing and releasing improvements safely combined to create a remarkably
+realistic proxy for real algorithmic trading. It remains to be seen if any of these students will
+end up in a related field, but all of them got a peek at what it's like to work in industry, at its
+most exciting.
 
 \end{document}
