@@ -10,7 +10,7 @@ import logging
 from log import log
 log.setLevel(logging.CRITICAL)
 
-prettyBoard = True
+prettyBoard = False
 if prettyBoard:
     try:
         import pygame
