@@ -141,23 +141,23 @@ if __name__ == "__main__":
     while True:
         if loop: time.sleep(2)
         z = p.getPnl()
-        if (len(z)>0):
-            t0 = min(v[0][1] for v in z.values())
-            plt.figure(figsize=(8,4)) #, tight_layout=True)
-            #plt.tight_layout()
-            for k in sorted(z.keys()):
-                v = z[k]
-                times = [(r[1]-t0)/60 for r in v]
-                pnls  = [r[3]/1000    for r in v]
-                plt.plot(times, pnls, label=k) ## "%8.8s $%8d %6d" % (k, v[-1][3], v[-1][2])
-                plt.legend(loc="upper left") #, prop={'family': 'monospace'})
-                plt.xlabel("minutes")
-                plt.ylabel("pnl ($K)")
-                plt.grid()
-                plt.savefig("tmp.png", dpi=60)
-                os.rename("tmp.png", "pnl.png")
-                if loop: plt.clf()
-                
-                print leaderboardFromSummary(z)
-                if not loop: break
+        t0 = min(v[0][1] for v in z.values())
+        fig=plt.figure(figsize=(8,4)) #, tight_layout=True)
+        #plt.tight_layout()
+        for k in sorted(z.keys()):
+            v = z[k]
+            times = [(r[1]-t0)/60 for r in v]
+            pnls  = [r[3]/1000    for r in v]
+            plt.plot(times, pnls, label=k) ## "%8.8s $%8d %6d" % (k, v[-1][3], v[-1][2])
+            plt.legend(loc="upper left") #, prop={'family': 'monospace'})
+            plt.xlabel("minutes")
+            plt.ylabel("pnl ($K)")
+            plt.grid()
+
+        plt.savefig("tmp.png", dpi=60)
+        os.rename("tmp.png", "pnl.png")
+        if loop: plt.clf()
+        
+        print leaderboardFromSummary(z)
+        if not loop: break
                 

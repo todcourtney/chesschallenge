@@ -22,7 +22,8 @@ class Stockfish:
         self.proc.delaybeforesend = 0
         pattern1 = "Stockfish DD 64 SSE4.2 by Tord Romstad, Marco Costalba and Joona Kiiski\r\n"
         pattern2 = "Stockfish DD 64 by Tord Romstad, Marco Costalba and Joona Kiiski\r\n"
-        self.proc.expect_exact([pattern1, pattern2])
+        pattern3 = "Stockfish 240415 64 by Tord Romstad, Marco Costalba and Joona Kiiski\r\n"
+        self.proc.expect_exact([pattern1, pattern2, pattern3])
 
     def getScores(self, line):
         cols = [c.strip() for c in line.split("|")]

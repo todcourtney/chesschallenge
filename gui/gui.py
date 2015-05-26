@@ -10,13 +10,12 @@ import logging
 from log import log
 log.setLevel(logging.CRITICAL)
 
-prettyBoard = False
+prettyBoard = True
 if prettyBoard:
     try:
         import pygame
         import inspect, os
         chessboardDirectory = os.path.dirname(inspect.getfile(ChessBoard))
-
         pygame.init()
         pygameScreen = pygame.display.set_mode((480, 480+240),1)
         pygame.display.set_caption('')
@@ -51,6 +50,7 @@ if prettyBoard:
         pieces[1]["."] = pygame.image.load(chessboardDirectory + "/img/b.png")
     except ImportError:
         prettyBoard = False
+        print "ERROR with PyGame and PrettyBoard Display\n"
 
 def drawPrettyBoard(board):
     for y, rank in enumerate(board):
